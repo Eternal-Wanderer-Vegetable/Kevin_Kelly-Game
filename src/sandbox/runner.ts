@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { once } from "node:events";
+import { ResourceMeter } from "../resources/resource-meter.js";
 import { resolveSandboxPath } from "./workspace.js";
 
 export interface SandboxCommandOptions {
@@ -52,8 +53,7 @@ export async function runSandboxCommand(
   );
   const timeoutMs = options.timeoutMs ?? 30_000;
   const maxOutputBytes = options.maxOutputBytes ?? 64 * 1024;
-  const startedAt = Date.now();
-  const resourceBefore = process.resourceUsage();
+  const meter = new ResourceMeter({ agentId: "sandbox-controller" });
   const child = spawn(options.command, args, {
     cwd,
     env: environment,
@@ -91,7 +91,7 @@ export async function runSandboxCommand(
     NodeJS.Signals | null,
   ];
   clearTimeout(timeout);
-  const resourceAfter = process.resourceUsage();
+  const usage = meter.finish();
 
   return {
     command: options.command,
@@ -102,21 +102,13 @@ export async function runSandboxCommand(
     stderr: Buffer.concat(stderr).toString("utf8"),
     timedOut,
     outputTruncated,
-    durationMs: Date.now() - startedAt,
+    durationMs: usage.wallTimeMs,
     resourceUsage: {
-      // Node exposes resource counters for the harness process, not the
-      // spawned child, so keep the scope explicit until a platform sampler is
-      // introduced.
+      // ResourceMeter measures the controller process. Child-process resource
+      // accounting is platform-specific and remains outside this phase.
       scope: "controller-process",
-      cpuTimeMs:
-        (resourceAfter.userCPUTime - resourceBefore.userCPUTime +
-          resourceAfter.systemCPUTime -
-          resourceBefore.systemCPUTime) /
-        1000,
-      memoryPeakBytes: Math.max(
-        resourceBefore.maxRSS,
-        resourceAfter.maxRSS,
-      ) * 1024,
+      cpuTimeMs: usage.cpuTimeMs,
+      memoryPeakBytes: usage.memoryPeakBytes,
     },
   };
 }

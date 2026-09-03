@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CONTRACT_SCHEMA_VERSION, type TaskSpec } from "../src/contracts/index.js";
+import {
+  assertEnergyTransaction,
+  CONTRACT_SCHEMA_VERSION,
+  type EnergyTransaction,
+  type TaskSpec,
+} from "../src/contracts/index.js";
 import {
   IndependentEvaluator,
   recordHumanAcceptance,
@@ -13,6 +18,13 @@ import {
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { assertUsageRecord } from "../src/contracts/index.js";
+import { ResourceMeter } from "../src/resources/resource-meter.js";
+import {
+  EnergyLedger,
+  energyTransactionEvent,
+  replayEnergyEvents,
+} from "../src/energy/ledger.js";
 import { runTask } from "../src/tasks/task-runner.js";
 
 const task: TaskSpec = {
@@ -124,4 +136,102 @@ test("base harness can be frozen, read back, and never overwritten", async () =>
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("resource meter records wall time, controller resources, and model counts", async () => {
+  const meter = new ResourceMeter({
+    agentId: "agent-meter",
+    usageId: "usage-meter",
+    localModelCalls: 2,
+    externalModelCalls: 1,
+  });
+  const usage = meter.finish();
+
+  assert.doesNotThrow(() => assertUsageRecord(usage));
+  assert.equal(usage.usageId, "usage-meter");
+  assert.equal(usage.localModelCalls, 2);
+  assert.equal(usage.externalModelCalls, 1);
+  assert.ok(usage.wallTimeMs >= 0);
+  assert.ok(usage.memoryPeakBytes > 0);
+  assert.throws(
+    () => new ResourceMeter({ agentId: "agent-meter", localModelCalls: -1 }),
+    /localModelCalls must be/,
+  );
+});
+
+test("energy ledger applies policy transactions and replays their events", () => {
+  const policy = {
+    initialEnergy: 10,
+    debitByReason: { tool: 3 },
+    rewardByReason: { success: 5 },
+  };
+  const ledger = new EnergyLedger(policy);
+  assert.equal(ledger.initialize("agent-energy"), 10);
+  const debit = ledger.debit("agent-energy", "tool");
+  const reward = ledger.reward("agent-energy", "success");
+  assert.equal(debit.balanceAfter, 7);
+  assert.equal(reward.balanceAfter, 12);
+
+  const replayed = replayEnergyEvents(
+    [
+      energyTransactionEvent("run-energy", debit),
+      energyTransactionEvent("run-energy", reward),
+    ],
+    policy,
+  );
+  assert.equal(replayed.balanceOf("agent-energy"), 12);
+});
+
+test("energy transactions reject invalid values and inconsistent transitions", () => {
+  const transaction: EnergyTransaction = {
+    schemaVersion: CONTRACT_SCHEMA_VERSION,
+    transactionId: "energy-invalid",
+    agentId: "agent-energy",
+    kind: "DEBIT",
+    amount: 3,
+    reason: "tool",
+    balanceBefore: 10,
+    balanceAfter: 7,
+  };
+  assert.doesNotThrow(() => assertEnergyTransaction(transaction));
+  assert.throws(
+    () => assertEnergyTransaction({ ...transaction, kind: "INVALID" }),
+    /kind is invalid/,
+  );
+  assert.throws(
+    () => assertEnergyTransaction({ ...transaction, amount: -1 }),
+    /amount must be non-negative/,
+  );
+  assert.throws(
+    () => assertEnergyTransaction({ ...transaction, balanceBefore: -1 }),
+    /balanceBefore must be non-negative/,
+  );
+
+  const ledger = new EnergyLedger({
+    initialEnergy: 10,
+    debitByReason: { tool: 3 },
+    rewardByReason: {},
+  });
+  assert.throws(
+    () =>
+      ledger.applyTransaction({
+        ...transaction,
+        balanceAfter: 99,
+      }),
+    /transition is invalid/,
+  );
+});
+
+test("energy debit is bounded at zero and unknown reasons are free", () => {
+  const ledger = new EnergyLedger({
+    initialEnergy: 2,
+    debitByReason: { expensive: 10 },
+    rewardByReason: {},
+  });
+  const debit = ledger.debit("agent-bounded", "expensive");
+  const free = ledger.debit("agent-bounded", "unknown");
+
+  assert.equal(debit.balanceAfter, 0);
+  assert.equal(free.amount, 0);
+  assert.equal(free.balanceAfter, 0);
 });
