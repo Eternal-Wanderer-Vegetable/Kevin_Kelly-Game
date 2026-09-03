@@ -5,6 +5,14 @@ import {
   IndependentEvaluator,
   recordHumanAcceptance,
 } from "../src/evaluation/evaluator.js";
+import {
+  freezeBaseHarness,
+  readBaseHarness,
+  type BaseHarnessSnapshot,
+} from "../src/evaluation/base-harness.js";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { runTask } from "../src/tasks/task-runner.js";
 
 const task: TaskSpec = {
@@ -86,4 +94,34 @@ test("human acceptance supports numeric ratings and rejects invalid runtime inpu
     () => recordHumanAcceptance(evaluation, 6 as never),
     /humanAcceptance must be/,
   );
+});
+
+test("base harness can be frozen, read back, and never overwritten", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "base-harness-"));
+  try {
+    const candidate = await runTask(task);
+    const evaluation = new IndependentEvaluator().evaluate({
+      task,
+      agentId: "base-agent",
+      candidate,
+      evaluationId: "base-evaluation",
+    });
+    const snapshot: BaseHarnessSnapshot = {
+      schemaVersion: 1,
+      harnessId: "base-harness",
+      coreHash: "core-v0",
+      task,
+      evaluation,
+    };
+    const filePath = join(directory, "snapshot.json");
+
+    await freezeBaseHarness(filePath, snapshot);
+    assert.deepEqual(await readBaseHarness(filePath), snapshot);
+    await assert.rejects(
+      () => freezeBaseHarness(filePath, snapshot),
+      /already exists/,
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
