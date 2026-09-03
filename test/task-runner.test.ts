@@ -26,6 +26,12 @@ test("task runner copies a fixture, runs the allowed command, and cleans up", as
 
     assert.equal(result.success, true);
     assert.equal(result.commandResult?.stdout, "fixture-input");
+    assert.deepEqual(result.patch, { added: {}, modified: {}, deleted: {} });
+    assert.deepEqual(result.workspace.metadata, {
+      source: fixtureRoot,
+      commit: "fixture",
+      inputFileCount: 0,
+    });
     assert.equal(result.workspace.cleaned, true);
     await assert.rejects(access(result.workspace.root));
   } finally {
@@ -51,4 +57,26 @@ test("task runner writes task inputs through the sandbox path boundary", async (
 
   assert.equal(result.success, false);
   assert.match(result.error ?? "", /escapes workspace/);
+});
+
+test("task runner preserves file modifications as a structured patch", async () => {
+  const task: TaskSpec = {
+    schemaVersion: CONTRACT_SCHEMA_VERSION,
+    taskId: "task-patch",
+    level: 1,
+    title: "Capture patch",
+    repository: { source: "fixture", commit: "fixture" },
+    allowedCommands: [process.execPath],
+    acceptanceCriteria: [],
+    baselineTestCommand: `"${process.execPath}" -e "require('node:fs').writeFileSync('src/value.txt', 'after')"`,
+  };
+
+  const result = await runTask(task, {
+    inputFiles: { "src/value.txt": "before" },
+  });
+
+  assert.equal(result.success, true);
+  assert.deepEqual(result.patch.modified, {
+    "src/value.txt": { before: "before", after: "after" },
+  });
 });
