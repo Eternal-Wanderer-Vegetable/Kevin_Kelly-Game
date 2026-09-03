@@ -35,6 +35,9 @@ test("sandbox runner enforces command allowlist and captures output", async () =
     });
     assert.equal(result.exitCode, 0);
     assert.equal(result.stdout, "sandbox-ok");
+    assert.equal(result.resourceUsage.scope, "controller-process");
+    assert.ok(result.resourceUsage.cpuTimeMs >= 0);
+    assert.ok(result.resourceUsage.memoryPeakBytes > 0);
     await assert.rejects(
       () =>
         runSandboxCommand({

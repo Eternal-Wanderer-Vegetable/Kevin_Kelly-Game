@@ -25,6 +25,13 @@ export interface SandboxCommandResult {
   readonly timedOut: boolean;
   readonly outputTruncated: boolean;
   readonly durationMs: number;
+  readonly resourceUsage: SandboxResourceUsage;
+}
+
+export interface SandboxResourceUsage {
+  readonly scope: "controller-process";
+  readonly cpuTimeMs: number;
+  readonly memoryPeakBytes: number;
 }
 
 export async function runSandboxCommand(
@@ -46,6 +53,7 @@ export async function runSandboxCommand(
   const timeoutMs = options.timeoutMs ?? 30_000;
   const maxOutputBytes = options.maxOutputBytes ?? 64 * 1024;
   const startedAt = Date.now();
+  const resourceBefore = process.resourceUsage();
   const child = spawn(options.command, args, {
     cwd,
     env: environment,
@@ -83,6 +91,7 @@ export async function runSandboxCommand(
     NodeJS.Signals | null,
   ];
   clearTimeout(timeout);
+  const resourceAfter = process.resourceUsage();
 
   return {
     command: options.command,
@@ -94,6 +103,21 @@ export async function runSandboxCommand(
     timedOut,
     outputTruncated,
     durationMs: Date.now() - startedAt,
+    resourceUsage: {
+      // Node exposes resource counters for the harness process, not the
+      // spawned child, so keep the scope explicit until a platform sampler is
+      // introduced.
+      scope: "controller-process",
+      cpuTimeMs:
+        (resourceAfter.userCPUTime - resourceBefore.userCPUTime +
+          resourceAfter.systemCPUTime -
+          resourceBefore.systemCPUTime) /
+        1000,
+      memoryPeakBytes: Math.max(
+        resourceBefore.maxRSS,
+        resourceAfter.maxRSS,
+      ) * 1024,
+    },
   };
 }
 
