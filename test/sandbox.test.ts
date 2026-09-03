@@ -64,3 +64,26 @@ test("sandbox runner terminates a timed-out process", async () => {
     await workspace.dispose();
   }
 });
+
+test("sandbox runner only exposes explicitly allowed environment variables", async () => {
+  const workspace = await createSandboxWorkspace("harness-test-");
+  try {
+    const result = await runSandboxCommand({
+      workspaceRoot: workspace.root,
+      command: process.execPath,
+      args: [
+        "-e",
+        "process.stdout.write(`${process.env.SANDBOX_ALLOWED ?? ''}|${process.env.SANDBOX_SECRET ?? ''}`)",
+      ],
+      allowedCommands: [process.execPath],
+      environment: {
+        SANDBOX_ALLOWED: "visible",
+        SANDBOX_SECRET: "hidden",
+      },
+      allowedEnvironment: ["SANDBOX_ALLOWED"],
+    });
+    assert.equal(result.stdout, "visible|");
+  } finally {
+    await workspace.dispose();
+  }
+});
