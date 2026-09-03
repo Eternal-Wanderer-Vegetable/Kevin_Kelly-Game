@@ -154,6 +154,69 @@ export function assertAgentState(value: unknown): asserts value is AgentState {
   assertString(value.genomeId, "genomeId");
 }
 
+export function assertUsageRecord(value: unknown): asserts value is UsageRecord {
+  assertObject(value, "UsageRecord");
+  assertExactKeys(value, [
+    "schemaVersion",
+    "usageId",
+    "agentId",
+    "wallTimeMs",
+    "cpuTimeMs",
+    "memoryPeakBytes",
+    "localModelCalls",
+    "externalModelCalls",
+  ]);
+  assertSchemaVersion(value, "UsageRecord");
+  assertString(value.usageId, "usageId");
+  assertString(value.agentId, "agentId");
+  assertNonNegativeNumber(value.wallTimeMs, "wallTimeMs");
+  assertNonNegativeNumber(value.cpuTimeMs, "cpuTimeMs");
+  assertNonNegativeNumber(value.memoryPeakBytes, "memoryPeakBytes");
+  assertNonNegativeInteger(value.localModelCalls, "localModelCalls");
+  assertNonNegativeInteger(value.externalModelCalls, "externalModelCalls");
+}
+
+export function assertEvaluationResult(
+  value: unknown,
+): asserts value is EvaluationResult {
+  assertObject(value, "EvaluationResult");
+  const allowedKeys = [
+    "schemaVersion",
+    "evaluationId",
+    "taskId",
+    "agentId",
+    "taskSuccess",
+    "testPassRate",
+    "regressionRate",
+    "runtimeMs",
+    "resourceConsumption",
+    "stability",
+    "humanAcceptance",
+  ] as const;
+  const actualKeys = Object.keys(value);
+  const unknownKey = actualKeys.find(
+    (key) => !allowedKeys.includes(key as (typeof allowedKeys)[number]),
+  );
+  if (unknownKey) {
+    throw new TypeError(`EvaluationResult contains unknown field: ${unknownKey}`);
+  }
+  assertSchemaVersion(value, "EvaluationResult");
+  assertString(value.evaluationId, "evaluationId");
+  assertString(value.taskId, "taskId");
+  assertString(value.agentId, "agentId");
+  if (typeof value.taskSuccess !== "boolean") {
+    throw new TypeError("taskSuccess must be a boolean");
+  }
+  assertUnitInterval(value.testPassRate, "testPassRate");
+  assertUnitInterval(value.regressionRate, "regressionRate");
+  assertNonNegativeNumber(value.runtimeMs, "runtimeMs");
+  assertUsageRecord(value.resourceConsumption);
+  assertUnitInterval(value.stability, "stability");
+  if ("humanAcceptance" in value) {
+    assertHumanAcceptance(value.humanAcceptance);
+  }
+}
+
 export function assertExperimentEvent(
   value: unknown,
 ): asserts value is ExperimentEvent {
@@ -248,5 +311,30 @@ function assertFiniteNumber(
 ): asserts value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new TypeError(`${name} must be a finite number`);
+  }
+}
+
+function assertNonNegativeNumber(
+  value: unknown,
+  name: string,
+): asserts value is number {
+  assertFiniteNumber(value, name);
+  if (value < 0) throw new TypeError(`${name} must be non-negative`);
+}
+
+function assertUnitInterval(value: unknown, name: string): asserts value is number {
+  assertFiniteNumber(value, name);
+  if (value < 0 || value > 1) {
+    throw new TypeError(`${name} must be between 0 and 1`);
+  }
+}
+
+function assertHumanAcceptance(value: unknown): asserts value is HumanAcceptance {
+  if (
+    value !== "accept" &&
+    value !== "reject" &&
+    (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 5)
+  ) {
+    throw new TypeError("humanAcceptance must be accept, reject, or an integer from 1 to 5");
   }
 }

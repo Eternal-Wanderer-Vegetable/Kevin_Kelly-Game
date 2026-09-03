@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   assertAgentState,
+  assertEvaluationResult,
   assertGenomeManifest,
   assertTaskSpec,
+  assertUsageRecord,
   CONTRACT_SCHEMA_VERSION,
 } from "../src/contracts/index.js";
 
@@ -92,5 +94,62 @@ test("rejects unsupported schema versions and invalid lifecycle values", () => {
         genomeId: "genome-001",
       }),
     /lifecycle is invalid/,
+  );
+});
+
+test("validates usage and independent evaluation contracts", () => {
+  const usage = {
+    schemaVersion: CONTRACT_SCHEMA_VERSION,
+    usageId: "usage-001",
+    agentId: "agent-001",
+    wallTimeMs: 10,
+    cpuTimeMs: 2,
+    memoryPeakBytes: 1024,
+    localModelCalls: 1,
+    externalModelCalls: 0,
+  };
+  assert.doesNotThrow(() => assertUsageRecord(usage));
+  assert.doesNotThrow(() =>
+    assertEvaluationResult({
+      schemaVersion: CONTRACT_SCHEMA_VERSION,
+      evaluationId: "evaluation-001",
+      taskId: "task-001",
+      agentId: "agent-001",
+      taskSuccess: true,
+      testPassRate: 1,
+      regressionRate: 0,
+      runtimeMs: 10,
+      resourceConsumption: usage,
+      stability: 1,
+      humanAcceptance: 5,
+    }),
+  );
+});
+
+test("rejects invalid evaluation metrics", () => {
+  assert.throws(
+    () =>
+      assertEvaluationResult({
+        schemaVersion: CONTRACT_SCHEMA_VERSION,
+        evaluationId: "evaluation-001",
+        taskId: "task-001",
+        agentId: "agent-001",
+        taskSuccess: true,
+        testPassRate: 1.1,
+        regressionRate: 0,
+        runtimeMs: 10,
+        resourceConsumption: {
+          schemaVersion: CONTRACT_SCHEMA_VERSION,
+          usageId: "usage-001",
+          agentId: "agent-001",
+          wallTimeMs: 10,
+          cpuTimeMs: 2,
+          memoryPeakBytes: 1024,
+          localModelCalls: 1,
+          externalModelCalls: 0,
+        },
+        stability: 1,
+      }),
+    /between 0 and 1/,
   );
 });
