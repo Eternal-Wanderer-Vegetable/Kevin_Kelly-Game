@@ -1,4 +1,5 @@
-import { cp } from "node:fs/promises";
+import { cp, readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import type { TaskSpec } from "../contracts/index.js";
 import {
   createSandboxWorkspace,
@@ -27,14 +28,26 @@ export interface TaskRunnerOptions {
 export interface TaskRunResult {
   readonly taskId: string;
   readonly success: boolean;
+  readonly patch: TaskPatch;
   readonly workspace: {
     readonly root: string;
     readonly inputRoot: string;
     readonly outputRoot: string;
     readonly cleaned: boolean;
+    readonly metadata: {
+      readonly source: string;
+      readonly commit: string;
+      readonly inputFileCount: number;
+    };
   };
   readonly commandResult: SandboxCommandResult | null;
   readonly error: string | null;
+}
+
+export interface TaskPatch {
+  readonly added: Readonly<Record<string, string>>;
+  readonly modified: Readonly<Record<string, { readonly before: string; readonly after: string }>>;
+  readonly deleted: Readonly<Record<string, string>>;
 }
 
 export async function runTask(
@@ -45,9 +58,17 @@ export async function runTask(
   let cleaned = false;
   let commandResult: SandboxCommandResult | null = null;
   let error: string | null = null;
+  let patch: TaskPatch = { added: {}, modified: {}, deleted: {} };
+  let before: Readonly<Record<string, string>> = {};
+  let inputFileCount = 0;
 
   try {
-    await populateTaskInput(workspace, taskSpec, options.inputFiles);
+    inputFileCount = await populateTaskInput(
+      workspace,
+      taskSpec,
+      options.inputFiles,
+    );
+    before = await snapshotWorkspace(workspace.inputRoot);
     const taskCommand = options.command ?? parseCommand(taskSpec.baselineTestCommand);
     commandResult = await runSandboxCommand({
       workspaceRoot: workspace.inputRoot,
@@ -63,9 +84,15 @@ export async function runTask(
         ? {}
         : { maxOutputBytes: options.maxOutputBytes }),
     });
+    const after = await snapshotWorkspace(workspace.inputRoot);
+    patch = createPatch(before, after);
   } catch (caught) {
     error = caught instanceof Error ? caught.message : String(caught);
   } finally {
+    if (error !== null || commandResult !== null) {
+      const after = await snapshotWorkspace(workspace.inputRoot);
+      patch = createPatch(before, after);
+    }
     await workspace.dispose();
     cleaned = true;
   }
@@ -73,11 +100,17 @@ export async function runTask(
   return {
     taskId: taskSpec.taskId,
     success: commandResult?.exitCode === 0 && !commandResult.timedOut,
+    patch,
     workspace: {
       root: workspace.root,
       inputRoot: workspace.inputRoot,
       outputRoot: workspace.outputRoot,
       cleaned,
+      metadata: {
+        source: taskSpec.repository.source,
+        commit: taskSpec.repository.commit,
+        inputFileCount,
+      },
     },
     commandResult,
     error,
@@ -88,7 +121,8 @@ async function populateTaskInput(
   workspace: SandboxWorkspace,
   taskSpec: TaskSpec,
   inputFiles?: Readonly<Record<string, string>>,
-): Promise<void> {
+): Promise<number> {
+  let inputFileCount = 0;
   // A fixture is copied before execution so the source tree remains immutable.
   if (taskSpec.repository.source !== "fixture") {
     await cp(taskSpec.repository.source, workspace.inputRoot, {
@@ -100,7 +134,51 @@ async function populateTaskInput(
 
   for (const [relativePath, content] of Object.entries(inputFiles ?? {})) {
     await writeSandboxFile(workspace.inputRoot, relativePath, content);
+    inputFileCount += 1;
   }
+  return inputFileCount;
+}
+
+async function snapshotWorkspace(
+  directory: string,
+  prefix = "",
+): Promise<Readonly<Record<string, string>>> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files: Record<string, string> = {};
+  for (const entry of entries) {
+    const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const absolutePath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      Object.assign(files, await snapshotWorkspace(absolutePath, relativePath));
+    } else if (entry.isFile()) {
+      files[relativePath] = await readFile(absolutePath, "utf8");
+    }
+  }
+  return files;
+}
+
+function createPatch(
+  before: Readonly<Record<string, string>>,
+  after: Readonly<Record<string, string>>,
+): TaskPatch {
+  const added: Record<string, string> = {};
+  const modified: Record<string, { before: string; after: string }> = {};
+  const deleted: Record<string, string> = {};
+  const paths = new Set([...Object.keys(before), ...Object.keys(after)]);
+
+  for (const path of paths) {
+    const previous = before[path];
+    const current = after[path];
+    if (previous === undefined && current !== undefined) {
+      added[path] = current;
+    } else if (previous !== undefined && current === undefined) {
+      deleted[path] = previous;
+    } else if (previous !== current && previous !== undefined && current !== undefined) {
+      modified[path] = { before: previous, after: current };
+    }
+  }
+
+  return { added, modified, deleted };
 }
 
 function parseCommand(commandLine: string): TaskCommand {
