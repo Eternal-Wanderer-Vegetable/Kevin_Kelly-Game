@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CONTRACT_SCHEMA_VERSION, type TaskSpec } from "../src/contracts/index.js";
-import { IndependentEvaluator } from "../src/evaluation/evaluator.js";
+import {
+  IndependentEvaluator,
+  recordHumanAcceptance,
+} from "../src/evaluation/evaluator.js";
 import { runTask } from "../src/tasks/task-runner.js";
 
 const task: TaskSpec = {
@@ -51,4 +54,36 @@ test("independent evaluator marks a candidate regression", async () => {
   assert.equal(result.testPassRate, 0);
   assert.equal(result.regressionRate, 1);
   assert.equal(result.stability, 1);
+});
+
+test("human acceptance is recorded without changing automatic evaluation metrics", async () => {
+  const candidate = await runTask(task);
+  const evaluation = new IndependentEvaluator().evaluate({
+    task,
+    agentId: "agent-003",
+    candidate,
+    evaluationId: "evaluation-human",
+  });
+
+  const annotated = recordHumanAcceptance(evaluation, "accept");
+
+  assert.equal(annotated.humanAcceptance, "accept");
+  assert.equal(annotated.taskSuccess, evaluation.taskSuccess);
+  assert.equal(annotated.testPassRate, evaluation.testPassRate);
+  assert.equal("humanAcceptance" in evaluation, false);
+});
+
+test("human acceptance supports numeric ratings and rejects invalid runtime input", async () => {
+  const candidate = await runTask(task);
+  const evaluation = new IndependentEvaluator().evaluate({
+    task,
+    agentId: "agent-004",
+    candidate,
+  });
+
+  assert.equal(recordHumanAcceptance(evaluation, 4).humanAcceptance, 4);
+  assert.throws(
+    () => recordHumanAcceptance(evaluation, 6 as never),
+    /humanAcceptance must be/,
+  );
 });

@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type {
   EvaluationResult,
+  HumanAcceptance,
   TaskSpec,
   UsageRecord,
 } from "../contracts/index.js";
+import { assertEvaluationResult } from "../contracts/index.js";
 import type { TaskRunResult } from "../tasks/task-runner.js";
 
 export interface EvaluationInput {
@@ -34,6 +36,20 @@ export class IndependentEvaluator {
       stability: calculateStability(input.candidate),
     };
   }
+}
+
+export function recordHumanAcceptance(
+  evaluation: EvaluationResult,
+  acceptance: HumanAcceptance,
+): EvaluationResult {
+  // Human review is an external annotation: preserve automatic metrics and
+  // return a new object so an existing evaluation cannot be altered in place.
+  const annotated: EvaluationResult = {
+    ...evaluation,
+    humanAcceptance: acceptance,
+  };
+  assertEvaluationResult(annotated);
+  return annotated;
 }
 
 function isSuccessfulRun(result: TaskRunResult): boolean {
