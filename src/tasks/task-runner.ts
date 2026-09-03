@@ -18,6 +18,8 @@ export interface TaskCommand {
 export interface TaskRunnerOptions {
   readonly command?: TaskCommand;
   readonly inputFiles?: Readonly<Record<string, string>>;
+  readonly allowedEnvironment?: readonly string[];
+  readonly environment?: Readonly<Record<string, string | undefined>>;
   readonly timeoutMs?: number;
   readonly maxOutputBytes?: number;
 }
@@ -52,6 +54,10 @@ export async function runTask(
       command: taskCommand.command,
       ...(taskCommand.args ? { args: taskCommand.args } : {}),
       allowedCommands: taskSpec.allowedCommands,
+      ...(options.allowedEnvironment
+        ? { allowedEnvironment: options.allowedEnvironment }
+        : {}),
+      ...(options.environment ? { environment: options.environment } : {}),
       ...(options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs }),
       ...(options.maxOutputBytes === undefined
         ? {}

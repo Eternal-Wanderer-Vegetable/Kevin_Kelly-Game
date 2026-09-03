@@ -8,6 +8,8 @@ export interface SandboxCommandOptions {
   readonly command: string;
   readonly args?: readonly string[];
   readonly allowedCommands: readonly string[];
+  readonly allowedEnvironment?: readonly string[];
+  readonly environment?: Readonly<Record<string, string | undefined>>;
   readonly timeoutMs?: number;
   readonly maxOutputBytes?: number;
   readonly cwd?: string;
@@ -37,11 +39,16 @@ export async function runSandboxCommand(
     options.workspaceRoot,
     options.cwd ?? ".",
   );
+  const environment = createSandboxEnvironment(
+    options.environment ?? process.env,
+    options.allowedEnvironment ?? [],
+  );
   const timeoutMs = options.timeoutMs ?? 30_000;
   const maxOutputBytes = options.maxOutputBytes ?? 64 * 1024;
   const startedAt = Date.now();
   const child = spawn(options.command, args, {
     cwd,
+    env: environment,
     shell: false,
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
@@ -92,4 +99,18 @@ export async function runSandboxCommand(
 
 function terminateProcess(child: ChildProcess): void {
   if (!child.killed) child.kill();
+}
+
+function createSandboxEnvironment(
+  source: Readonly<Record<string, string | undefined>>,
+  allowedKeys: readonly string[],
+): NodeJS.ProcessEnv {
+  // Default to an empty environment so host secrets are never inherited by
+  // accident; callers must explicitly opt in to each required variable.
+  const environment: NodeJS.ProcessEnv = {};
+  for (const key of allowedKeys) {
+    const value = source[key];
+    if (value !== undefined) environment[key] = value;
+  }
+  return environment;
 }
