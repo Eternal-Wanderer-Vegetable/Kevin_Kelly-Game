@@ -43,6 +43,19 @@ export interface UsageRecord {
   readonly externalModelCalls: number;
 }
 
+export type EnergyTransactionKind = "DEBIT" | "REWARD";
+
+export interface EnergyTransaction {
+  readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
+  readonly transactionId: string;
+  readonly agentId: string;
+  readonly kind: EnergyTransactionKind;
+  readonly amount: number;
+  readonly reason: string;
+  readonly balanceBefore: number;
+  readonly balanceAfter: number;
+}
+
 export interface EvaluationResult {
   readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
   readonly evaluationId: string;
@@ -174,6 +187,32 @@ export function assertUsageRecord(value: unknown): asserts value is UsageRecord 
   assertNonNegativeNumber(value.memoryPeakBytes, "memoryPeakBytes");
   assertNonNegativeInteger(value.localModelCalls, "localModelCalls");
   assertNonNegativeInteger(value.externalModelCalls, "externalModelCalls");
+}
+
+export function assertEnergyTransaction(
+  value: unknown,
+): asserts value is EnergyTransaction {
+  assertObject(value, "EnergyTransaction");
+  assertExactKeys(value, [
+    "schemaVersion",
+    "transactionId",
+    "agentId",
+    "kind",
+    "amount",
+    "reason",
+    "balanceBefore",
+    "balanceAfter",
+  ]);
+  assertSchemaVersion(value, "EnergyTransaction");
+  assertString(value.transactionId, "transactionId");
+  assertString(value.agentId, "agentId");
+  if (value.kind !== "DEBIT" && value.kind !== "REWARD") {
+    throw new TypeError("EnergyTransaction.kind is invalid");
+  }
+  assertNonNegativeNumber(value.amount, "amount");
+  assertString(value.reason, "reason");
+  assertNonNegativeNumber(value.balanceBefore, "balanceBefore");
+  assertNonNegativeNumber(value.balanceAfter, "balanceAfter");
 }
 
 export function assertEvaluationResult(
