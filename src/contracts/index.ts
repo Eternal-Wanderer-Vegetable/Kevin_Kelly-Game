@@ -18,6 +18,33 @@ export interface TaskSpec {
   readonly baselineTestCommand: string;
 }
 
+export interface PluginManifest {
+  readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
+  readonly pluginId: string;
+  readonly name: string;
+  readonly version: string;
+  readonly entrypoint: string;
+  readonly dependencies: readonly string[];
+  readonly pluginHash: string;
+}
+
+export interface WorkflowManifest {
+  readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
+  readonly workflowId: string;
+  readonly name: string;
+  readonly version: string;
+  readonly steps: readonly string[];
+  readonly dependencies: readonly string[];
+}
+
+export interface PolicyDocument {
+  readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
+  readonly policyId: string;
+  readonly name: string;
+  readonly version: string;
+  readonly rules: Readonly<Record<string, unknown>>;
+}
+
 export interface GenomeManifest {
   readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
   readonly genomeId: string;
@@ -115,6 +142,69 @@ export function assertTaskSpec(value: unknown): asserts value is TaskSpec {
   assertStringArray(value.allowedCommands, "allowedCommands");
   assertStringArray(value.acceptanceCriteria, "acceptanceCriteria");
   assertString(value.baselineTestCommand, "baselineTestCommand");
+}
+
+export function assertPluginManifest(
+  value: unknown,
+): asserts value is PluginManifest {
+  assertObject(value, "PluginManifest");
+  assertExactKeys(value, [
+    "schemaVersion",
+    "pluginId",
+    "name",
+    "version",
+    "entrypoint",
+    "dependencies",
+    "pluginHash",
+  ]);
+  assertSchemaVersion(value, "PluginManifest");
+  assertString(value.pluginId, "pluginId");
+  assertString(value.name, "name");
+  assertString(value.version, "version");
+  assertVersion(value.version, "version");
+  assertString(value.entrypoint, "entrypoint");
+  assertStringArray(value.dependencies, "dependencies");
+  assertString(value.pluginHash, "pluginHash");
+}
+
+export function assertWorkflowManifest(
+  value: unknown,
+): asserts value is WorkflowManifest {
+  assertObject(value, "WorkflowManifest");
+  assertExactKeys(value, [
+    "schemaVersion",
+    "workflowId",
+    "name",
+    "version",
+    "steps",
+    "dependencies",
+  ]);
+  assertSchemaVersion(value, "WorkflowManifest");
+  assertString(value.workflowId, "workflowId");
+  assertString(value.name, "name");
+  assertString(value.version, "version");
+  assertVersion(value.version, "version");
+  assertStringArray(value.steps, "steps");
+  assertStringArray(value.dependencies, "dependencies");
+}
+
+export function assertPolicyDocument(
+  value: unknown,
+): asserts value is PolicyDocument {
+  assertObject(value, "PolicyDocument");
+  assertExactKeys(value, [
+    "schemaVersion",
+    "policyId",
+    "name",
+    "version",
+    "rules",
+  ]);
+  assertSchemaVersion(value, "PolicyDocument");
+  assertString(value.policyId, "policyId");
+  assertString(value.name, "name");
+  assertString(value.version, "version");
+  assertVersion(value.version, "version");
+  assertObject(value.rules, "PolicyDocument.rules");
 }
 
 export function assertGenomeManifest(
@@ -324,6 +414,12 @@ function assertSchemaVersion(
 function assertString(value: unknown, name: string): asserts value is string {
   if (typeof value !== "string" || value.length === 0) {
     throw new TypeError(`${name} must be a non-empty string`);
+  }
+}
+
+function assertVersion(value: string, name: string): void {
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value)) {
+    throw new TypeError(`${name} must be a semantic version`);
   }
 }
 
