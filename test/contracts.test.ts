@@ -4,6 +4,7 @@ import {
   assertAgentState,
   assertEvaluationResult,
   assertGenomeManifest,
+  assertPluginManifest,
   assertTaskSpec,
   assertUsageRecord,
   CONTRACT_SCHEMA_VERSION,
@@ -66,6 +67,35 @@ test("validates genome lineage and lifecycle state", () => {
       energy: 10,
       genomeId: "genome-002",
     }),
+  );
+});
+
+test("validates a plugin manifest", () => {
+  assert.doesNotThrow(() =>
+    assertPluginManifest({
+      schemaVersion: CONTRACT_SCHEMA_VERSION,
+      pluginId: "plugin.search",
+      name: "Search Plugin",
+      version: "1.0.0",
+      entrypoint: "src/index.ts",
+      dependencies: [],
+      pluginHash: "sha256:plugin",
+    }),
+  );
+
+  assert.throws(
+    () =>
+      assertPluginManifest({
+        schemaVersion: CONTRACT_SCHEMA_VERSION,
+        pluginId: "plugin.search",
+        name: "Search Plugin",
+        version: "1.0.0",
+        entrypoint: "src/index.ts",
+        dependencies: [],
+        pluginHash: "sha256:plugin",
+        mutableCoreDependency: true,
+      }),
+    /unknown or missing fields/,
   );
 });
 
