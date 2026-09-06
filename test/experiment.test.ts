@@ -50,9 +50,10 @@ function stateEvent(
 }
 
 test("loadConfig resolves defaults relative to the working directory", () => {
-  const config = loadConfig({}, "E:\\experiment");
-  assert.equal(config.dataDirectory, "E:\\experiment\\data");
-  assert.equal(config.eventLogPath, "E:\\experiment\\data\\runs\\events.jsonl");
+  const cwd = join(tmpdir(), "experiment");
+  const config = loadConfig({}, cwd);
+  assert.equal(config.dataDirectory, join(cwd, "data"));
+  assert.equal(config.eventLogPath, join(cwd, "data", "runs", "events.jsonl"));
   assert.equal(config.defaultEnergy, 100);
 });
 

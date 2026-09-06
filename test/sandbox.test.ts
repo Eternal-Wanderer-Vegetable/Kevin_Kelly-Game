@@ -21,6 +21,8 @@
 
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 import { spawn } from "node:child_process";
 import { createSandboxWorkspace, resolveSandboxPath, writeSandboxFile } from "../src/sandbox/workspace.js";
@@ -38,8 +40,9 @@ test("sandbox workspace creates isolated input and output roots", async () => {
 });
 
 test("sandbox path resolution rejects traversal outside the workspace", () => {
+  const workspaceRoot = join(tmpdir(), "sandbox", "workspace");
   assert.throws(
-    () => resolveSandboxPath("C:\\sandbox\\workspace", "..\\outside"),
+    () => resolveSandboxPath(workspaceRoot, join("..", "outside")),
     /escapes workspace/,
   );
 });
