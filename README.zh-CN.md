@@ -2,7 +2,7 @@
 
 # Kevin_Kelly-Game
 
-*人设则滞，天演乃成。*
+*“人设则滞，天演乃成”*
 
 <p>这是一个使用 TypeScript 实现的实验性平台，用于研究 Coding Agent 是否能够在受控环境中通过 Self-Rewrite、Genome 遗传、结构化 Mutation 和独立 Evaluation，逐步改进自己的 Harness。</p>
 
