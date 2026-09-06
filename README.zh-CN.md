@@ -1,10 +1,20 @@
-# Evolving Coding Harness
+<div align="center">
 
-这是一个使用 TypeScript 实现的实验性平台，用于研究 Coding Agent 是否能够在受控环境中通过 Self-Rewrite、Genome 遗传、结构化 Mutation 和独立 Evaluation，逐步改进自己的 Harness。
+# Kevin_Kelly-Game
+
+<p>这是一个使用 TypeScript 实现的实验性平台，用于研究 Coding Agent 是否能够在受控环境中通过 Self-Rewrite、Genome 遗传、结构化 Mutation 和独立 Evaluation，逐步改进自己的 Harness。</p>
+
+<p>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-24%2B-339933?logo=node.js&logoColor=white" alt="Node.js 24 或更高版本"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.8%2B-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.8 或更高版本"></a>
+  <a href="https://nodejs.org/api/esm.html"><img src="https://img.shields.io/badge/ESM-Node.js%20ESM-339933?logo=node.js&logoColor=white" alt="Node.js ESM"></a>
+  <a href="https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/ci.yml?branch=main&label=CI" alt="CI 状态"></a>
+</p>
+
+<p><a href="README.md">English README</a></p>
+</div>
 
 本项目定位为可审计、可复现实验平台，而不是生产级自主编程系统。系统将不可修改的控制平面与 Agent 所有的资产分离，并记录复现实验和比较结果所需的状态。
-
-[English README](README.md)
 
 ## 当前状态
 

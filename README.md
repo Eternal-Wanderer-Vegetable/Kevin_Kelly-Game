@@ -1,10 +1,20 @@
-# Evolving Coding Harness
+<div align="center">
 
-An experimental TypeScript platform for studying whether coding agents can improve their own harnesses through controlled self-rewrite, genome inheritance, mutation, and independent evaluation.
+# Kevin_Kelly-Game
+
+<p>An experimental TypeScript platform for studying whether coding agents can improve their own harnesses through controlled self-rewrite, genome inheritance, mutation, and independent evaluation.</p>
+
+<p>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-24%2B-339933?logo=node.js&logoColor=white" alt="Node.js 24 or newer"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.8%2B-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.8 or newer"></a>
+  <a href="https://nodejs.org/api/esm.html"><img src="https://img.shields.io/badge/ESM-Node.js%20ESM-339933?logo=node.js&logoColor=white" alt="Node.js ESM"></a>
+  <a href="https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/ci.yml?branch=main&label=CI" alt="CI status"></a>
+</p>
+
+<p><a href="README.zh-CN.md">中文说明</a></p>
+</div>
 
 The project is designed as an auditable research harness rather than a production autonomous coding system. It keeps the immutable control plane separate from agent-owned assets and records the state needed to reproduce and compare experiments.
-
-[中文说明](README.zh-CN.md)
 
 ## Current Status
 
