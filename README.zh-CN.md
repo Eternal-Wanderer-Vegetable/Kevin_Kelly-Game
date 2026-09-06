@@ -11,7 +11,7 @@
   <a href="https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/ci.yml?branch=main&label=CI" alt="CI 状态"></a>
 </p>
 
-<p><a href="README.md">English README</a></p>
+中文 | [English](README.md)
 </div>
 
 本项目定位为可审计、可复现实验平台，而不是生产级自主编程系统。系统将不可修改的控制平面与 Agent 所有的资产分离，并记录复现实验和比较结果所需的状态。
