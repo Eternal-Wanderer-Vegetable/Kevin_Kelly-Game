@@ -215,10 +215,12 @@ export class CalibrationRunner {
       task: calibrationTask.task,
       agentId,
       candidate: taskResult,
-      ...(baseline === undefined
+        ...(baseline === undefined
         ? {}
         : {
-            baseline: await this.runBaselineTask(calibrationTask, options),
+            // Regression is measured against the fixed task command, never
+            // against the candidate's custom command or timeout settings.
+            baseline: await this.runBaselineTask(calibrationTask),
           }),
     });
     const annotated =
@@ -242,14 +244,12 @@ export class CalibrationRunner {
 
   private async runBaselineTask(
     calibrationTask: CalibrationTask,
-    options: ExperimentRunOptions,
   ): Promise<TaskRunResult> {
     return runTask(
       calibrationTask.task,
       calibrationTask.inputFiles === undefined
-        ? options.taskRunner
+        ? {}
         : {
-            ...(options.taskRunner ?? {}),
             inputFiles: calibrationTask.inputFiles,
           },
     );
