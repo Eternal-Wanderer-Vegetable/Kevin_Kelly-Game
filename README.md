@@ -2,6 +2,8 @@
 
 # Kevin_Kelly-Game
 
+*Don't design the agent. Evolve it.*
+
 <p>An experimental TypeScript platform for studying whether coding agents can improve their own harnesses through controlled self-rewrite, genome inheritance, mutation, and independent evaluation.</p>
 
 <p>
@@ -12,6 +14,7 @@
 </p>
 
 English | [中文](README.zh-CN.md)
+
 </div>
 
 The project is designed as an auditable research harness rather than a production autonomous coding system. It keeps the immutable control plane separate from agent-owned assets and records the state needed to reproduce and compare experiments.
