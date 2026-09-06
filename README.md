@@ -11,7 +11,7 @@
   <a href="https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/ci.yml?branch=main&label=CI" alt="CI status"></a>
 </p>
 
-<p><a href="README.zh-CN.md">中文说明</a></p>
+[中文](README.zh-CN.md) | English
 </div>
 
 The project is designed as an auditable research harness rather than a production autonomous coding system. It keeps the immutable control plane separate from agent-owned assets and records the state needed to reproduce and compare experiments.
