@@ -45,6 +45,33 @@ export interface PolicyDocument {
   readonly rules: Readonly<Record<string, unknown>>;
 }
 
+export type MemoryOutcome = "success" | "failure";
+
+export interface IndividualMemory {
+  readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
+  readonly memoryId: string;
+  readonly agentId: string;
+  readonly taskId: string;
+  readonly context: Readonly<Record<string, unknown>>;
+  readonly summary: string;
+  readonly outcome: MemoryOutcome;
+  readonly recordedAt: string;
+}
+
+export type CandidatePluginStatus = "candidate" | "verified";
+
+export interface CandidatePlugin {
+  readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
+  readonly candidateId: string;
+  readonly agentId: string;
+  readonly plugin: PluginManifest;
+  readonly sourceMemoryIds: readonly string[];
+  readonly verificationTaskIds: readonly string[];
+  readonly successfulVerificationTaskIds: readonly string[];
+  readonly successfulVerificationCount: number;
+  readonly status: CandidatePluginStatus;
+}
+
 export interface GenomeManifest {
   readonly schemaVersion: typeof CONTRACT_SCHEMA_VERSION;
   readonly genomeId: string;
@@ -205,6 +232,82 @@ export function assertPolicyDocument(
   assertString(value.version, "version");
   assertVersion(value.version, "version");
   assertObject(value.rules, "PolicyDocument.rules");
+}
+
+export function assertIndividualMemory(
+  value: unknown,
+): asserts value is IndividualMemory {
+  assertObject(value, "IndividualMemory");
+  assertExactKeys(value, [
+    "schemaVersion",
+    "memoryId",
+    "agentId",
+    "taskId",
+    "context",
+    "summary",
+    "outcome",
+    "recordedAt",
+  ]);
+  assertSchemaVersion(value, "IndividualMemory");
+  assertString(value.memoryId, "memoryId");
+  assertString(value.agentId, "agentId");
+  assertString(value.taskId, "taskId");
+  assertObject(value.context, "IndividualMemory.context");
+  assertString(value.summary, "summary");
+  if (value.outcome !== "success" && value.outcome !== "failure") {
+    throw new TypeError("IndividualMemory.outcome is invalid");
+  }
+  assertString(value.recordedAt, "recordedAt");
+}
+
+export function assertCandidatePlugin(
+  value: unknown,
+): asserts value is CandidatePlugin {
+  assertObject(value, "CandidatePlugin");
+  assertExactKeys(value, [
+    "schemaVersion",
+    "candidateId",
+    "agentId",
+    "plugin",
+    "sourceMemoryIds",
+    "verificationTaskIds",
+    "successfulVerificationTaskIds",
+    "successfulVerificationCount",
+    "status",
+  ]);
+  assertSchemaVersion(value, "CandidatePlugin");
+  assertString(value.candidateId, "candidateId");
+  assertString(value.agentId, "agentId");
+  assertPluginManifest(value.plugin);
+  assertStringArray(value.sourceMemoryIds, "sourceMemoryIds");
+  assertStringArray(value.verificationTaskIds, "verificationTaskIds");
+  assertStringArray(
+    value.successfulVerificationTaskIds,
+    "successfulVerificationTaskIds",
+  );
+  assertNonNegativeInteger(
+    value.successfulVerificationCount,
+    "successfulVerificationCount",
+  );
+  if (value.status !== "candidate" && value.status !== "verified") {
+    throw new TypeError("CandidatePlugin.status is invalid");
+  }
+  if (
+    value.successfulVerificationCount !==
+    value.successfulVerificationTaskIds.length
+  ) {
+    throw new TypeError(
+      "CandidatePlugin.successfulVerificationCount does not match successful tasks",
+    );
+  }
+  if (
+    value.status === "verified" &&
+    value.successfulVerificationCount < 2
+  ) {
+    throw new TypeError(
+      "verified CandidatePlugin requires at least two successful verifications",
+    );
+  }
 }
 
 export function assertGenomeManifest(
