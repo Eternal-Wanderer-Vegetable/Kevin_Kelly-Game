@@ -59,7 +59,7 @@ test("loaders validate and load plugin, workflow, and policy assets", async () =
       join(root, "policy.json"),
       JSON.stringify({
         schemaVersion: CONTRACT_SCHEMA_VERSION,
-        policyId: "policy.fixture",
+      policyId: "policy.fixture",
         name: "Fixture Policy",
         version: "1.0.0",
         rules: { verification: "always" },
