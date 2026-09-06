@@ -145,4 +145,4 @@ CI 配置位于 `.github/workflows/ci.yml`，使用 Node.js 24。
 
 ## 许可证
 
-仓库目前尚未声明许可证。在添加许可证之前，请按保留全部权利处理。
+本项目采用 GNU Affero General Public License v3.0 或更高版本（AGPL-3.0-or-later）授权。完整协议文本请参阅 [LICENSE](LICENSE)。

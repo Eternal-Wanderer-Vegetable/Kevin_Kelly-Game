@@ -145,4 +145,4 @@ The workflow is defined in `.github/workflows/ci.yml` and uses Node.js 24.
 
 ## License
 
-No license has been declared yet. Treat the repository as all-rights-reserved unless a license is added.
+This project is licensed under the GNU Affero General Public License v3.0 or later. See [LICENSE](LICENSE) for the full text.
