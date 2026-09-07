@@ -143,6 +143,7 @@ The sandbox is intended for controlled experiments. Do not run untrusted mutatio
 
 - [Engineering design](design_docs/Evolving_Coding_Harness_工程方案.md)
 - [Implementation plan](design_docs/Evolving_Coding_Harness_落地实施方案.md)
+- [Containerization and CLI plan](design_docs/Evolving_Coding_Harness_容器化与CLI方案.md)
 - [中文 README](README.zh-CN.md)
 
 ## CI

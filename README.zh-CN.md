@@ -142,6 +142,7 @@ Sandbox 用于受控实验。不要让不可信 Mutation 代码直接操作生�
 
 - [工程方案](design_docs/Evolving_Coding_Harness_工程方案.md)
 - [落地实施方案](design_docs/Evolving_Coding_Harness_落地实施方案.md)
+- [容器化与 CLI 方案](design_docs/Evolving_Coding_Harness_容器化与CLI方案.md)
 - [English README](README.md)
 
 ## CI
