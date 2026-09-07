@@ -114,8 +114,13 @@ export function createSandboxTools(options: SandboxToolsOptions): ToolRegistry {
   });
 
   registry.register("exec", async (input) => {
+    // Validation runs outside the try, matching read/search/write and the
+    // memory tools: malformed input is a caller bug and throws, while an
+    // execution refusal or failure becomes an observable failure result.
+    const command = requireString(input.command, "exec.command");
+    const args = requireStringArray(input.args, "exec.args");
     try {
-      const result = await execute(options, input, "exec");
+      const result = await execute(options, command, args);
       return success({
         command: result.command,
         args: result.args,
@@ -132,8 +137,10 @@ export function createSandboxTools(options: SandboxToolsOptions): ToolRegistry {
   });
 
   registry.register("test", async (input) => {
+    const command = requireString(input.command, "test.command");
+    const args = requireStringArray(input.args, "test.args");
     try {
-      const result = await execute(options, input, "test");
+      const result = await execute(options, command, args);
       return success({
         command: result.command,
         args: result.args,
@@ -156,11 +163,9 @@ export function createSandboxTools(options: SandboxToolsOptions): ToolRegistry {
 
 async function execute(
   options: SandboxToolsOptions,
-  input: Readonly<Record<string, unknown>>,
-  toolName: string,
+  command: string,
+  args: readonly string[],
 ): ReturnType<typeof runSandboxCommand> {
-  const command = requireString(input.command, `${toolName}.command`);
-  const args = requireStringArray(input.args, `${toolName}.args`);
   return runSandboxCommand({
     workspaceRoot: options.workspace.inputRoot,
     command,
