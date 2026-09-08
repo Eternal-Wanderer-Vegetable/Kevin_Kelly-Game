@@ -66,13 +66,22 @@ npm run typecheck    Run TypeScript without emitting files
 npm run build        Compile TypeScript to dist/
 npm test             Run the test suite
 npm run run-task     Show the task runner CLI help
+npm run run-generation
+                     Run one calibration or generalization experiment generation
 npm run replay-run   Show the event replay CLI help
 npm run report       Show the report CLI help
 npm run harness      Show the root harness CLI help
 npm run harness -- repl --provider mock --goal "inspect the workspace"
+npm run harness -- run-generation --plan ./plans/generation.json --format json
 ```
 
 The command-line helpers currently expose the stable interfaces and help contracts used by the MVP. Use `npm run harness -- repl` for the interactive Observe -> Think -> Act session. Ink is loaded only by the TTY renderer; non-interactive commands, CI, and the text fallback do not load it. Experiment orchestration is also available directly through the TypeScript modules under `src/experiment/`.
+
+`run-generation` accepts a schema version 1 JSON plan. Use `mode: "calibration"`
+for one baseline/candidate task, or `mode: "generalization"` for evolution,
+validation, and holdout partitions with precommitted thresholds. It appends
+generation and experiment-run events to the configured JSONL event log. A
+generalization report that fails its holdout checks exits with status 1.
 
 ## Container Deployment
 
