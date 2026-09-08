@@ -35,6 +35,7 @@ The implementation currently covers the complete first-stage engineering path:
 - Clone, structural Mutation, and Embryo qualification
 - Agent lifecycle, Population snapshots, and shared SLM queue
 - Calibration experiments and holdout generalization evaluation
+- Interactive REPL with a real sandbox workspace and no-TTY text fallback
 
 The repository is still an experimental MVP. It does not yet provide distributed execution, multi-agent collaboration, automatic task generation, or a production-grade persistence layer.
 
@@ -68,9 +69,22 @@ npm run run-task     Show the task runner CLI help
 npm run replay-run   Show the event replay CLI help
 npm run report       Show the report CLI help
 npm run harness      Show the root harness CLI help
+npm run harness -- repl --provider mock --goal "inspect the workspace"
 ```
 
-The command-line helpers currently expose the stable interfaces and help contracts used by the MVP. Experiment orchestration is also available directly through the TypeScript modules under `src/experiment/`.
+The command-line helpers currently expose the stable interfaces and help contracts used by the MVP. Use `npm run harness -- repl` for the interactive Observe -> Think -> Act session. Ink is loaded only by the TTY renderer; non-interactive commands, CI, and the text fallback do not load it. Experiment orchestration is also available directly through the TypeScript modules under `src/experiment/`.
+
+## Container Deployment
+
+```bash
+docker build --target runtime -t evolving-coding-harness:dev .
+docker compose run --rm harness --help
+```
+
+The Python variant is available with `--target runtime-python`. See
+[`docs/container-deployment.md`](docs/container-deployment.md) for Compose
+volumes, model endpoint configuration, resource limits, and the container
+security boundary.
 
 ## Architecture
 

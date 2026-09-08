@@ -17,5 +17,11 @@
     "declaration": true
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"],
-  "exclude": ["node_modules", "dist", "data", "experiments"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "data",
+    "experiments",
+    "src/cli/tui/**/*.tsx"
+  ]
 }

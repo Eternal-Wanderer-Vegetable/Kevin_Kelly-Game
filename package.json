@@ -8,16 +8,21 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit",
-    "build": "tsc",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.tui.json --noEmit",
+    "build": "tsc && tsc -p tsconfig.tui.json",
     "test": "tsx --test \"test/**/*.test.ts\"",
     "harness": "tsx scripts/harness.ts",
     "run-task": "tsx scripts/run-task.ts",
     "replay-run": "tsx scripts/replay-run.ts",
     "report": "tsx scripts/report.ts"
   },
+  "dependencies": {
+    "ink": "7.1.1",
+    "react": "19.2.8"
+  },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "@types/react": "19.2.18",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
