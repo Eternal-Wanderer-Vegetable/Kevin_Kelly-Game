@@ -95,6 +95,15 @@ The Python variant is available with `--target runtime-python`. See
 volumes, model endpoint configuration, resource limits, and the container
 security boundary.
 
+## Release Automation
+
+Pushing a semantic version tag such as `v0.1.0` starts
+[`.github/workflows/release.yml`](.github/workflows/release.yml). The workflow
+runs typecheck, build, and tests, publishes the `runtime` and `runtime-python`
+images to GHCR, and attaches a runnable archive to the GitHub Release. Stable
+tags also update the `latest` image tag; prerelease tags such as `v0.2.0-rc.1`
+do not.
+
 ## Architecture
 
 The system is organized around three boundaries:
