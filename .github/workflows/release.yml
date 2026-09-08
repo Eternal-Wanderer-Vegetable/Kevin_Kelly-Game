@@ -103,10 +103,11 @@ jobs:
 
       - name: Align package metadata with release tag
         shell: bash
-        run: npm version "${GITHUB_REF_NAME#v}" \
-          --allow-same-version \
-          --no-git-tag-version \
-          --ignore-scripts
+        run: |
+          npm version "${GITHUB_REF_NAME#v}" \
+            --allow-same-version \
+            --no-git-tag-version \
+            --ignore-scripts
 
       - name: Resolve lower-case image name
         id: image
