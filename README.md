@@ -67,6 +67,7 @@ npm test             Run the test suite
 npm run run-task     Show the task runner CLI help
 npm run replay-run   Show the event replay CLI help
 npm run report       Show the report CLI help
+npm run harness      Show the root harness CLI help
 ```
 
 The command-line helpers currently expose the stable interfaces and help contracts used by the MVP. Experiment orchestration is also available directly through the TypeScript modules under `src/experiment/`.

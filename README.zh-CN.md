@@ -66,6 +66,7 @@ npm test             运行测试套件
 npm run run-task     显示任务运行器帮助
 npm run replay-run   显示事件重放帮助
 npm run report       显示报告命令帮助
+npm run harness      显示 Harness 根命令帮助
 ```
 
 CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。实验编排能力也可以直接通过 `src/experiment/` 下的 TypeScript 模块使用。

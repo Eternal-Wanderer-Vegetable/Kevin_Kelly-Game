@@ -19,25 +19,11 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import {
-  formatHelp,
-  reportNotImplemented,
-  shouldShowHelp,
-} from "../src/cli/help.js";
+import { defaultIo, executeCommand } from "../src/cli/command.js";
+import { replayRunCommand } from "../src/cli/commands/replay-run.js";
 
-const command = {
-  name: "replay-run",
-  summary: "Replay an experiment event log.",
-  usage: "replay-run [--input <events.jsonl>]",
-  options: [
-    "--input <path>  Read an append-only event log.",
-    "--help, -h       Show this help.",
-  ],
-} as const;
-
-const args = process.argv.slice(2);
-if (shouldShowHelp(args)) {
-  process.stdout.write(formatHelp(command));
-} else {
-  reportNotImplemented(command, args);
-}
+process.exitCode = await executeCommand(
+  replayRunCommand,
+  process.argv.slice(2),
+  defaultIo,
+);
