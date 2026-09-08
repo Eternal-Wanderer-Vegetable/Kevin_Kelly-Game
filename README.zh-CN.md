@@ -65,16 +65,25 @@ npm run typecheck    运行 TypeScript 类型检查，不生成文件
 npm run build        将 TypeScript 编译到 dist/
 npm test             运行测试套件
 npm run run-task     显示任务运行器帮助
+npm run run-generation
+                     运行一代校准或泛化实验
 npm run replay-run   显示事件重放帮助
 npm run report       显示报告命令帮助
 npm run harness      显示 Harness 根命令帮助
 npm run harness -- repl --provider mock --goal "检查工作区"
+npm run harness -- run-generation --plan ./plans/generation.json --format json
 ```
 
 CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。使用
 `npm run harness -- repl` 启动 Observe -> Think -> Act 交互会话。Ink 只在 TTY
 渲染路径中动态加载；非交互命令、CI 和文本回退不会加载它。实验编排能力也可以
 直接通过 `src/experiment/` 下的 TypeScript 模块使用。
+
+`run-generation` 接受 schema version 1 的 JSON 计划。使用
+`mode: "calibration"` 执行一次 baseline/candidate 任务对照，或使用
+`mode: "generalization"` 执行 evolution、validation 和 holdout 分区，并按预先
+提交的阈值判定结果。命令会把 generation 与 experiment-run 事件追加到 JSONL
+事件日志；当泛化报告未通过 holdout 检查时返回状态码 1。
 
 ## 容器化部署
 

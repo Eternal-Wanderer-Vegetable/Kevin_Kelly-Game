@@ -24,6 +24,7 @@ import { configCommand } from "../src/cli/commands/config.js";
 import { replayRunCommand } from "../src/cli/commands/replay-run.js";
 import { reportCommand } from "../src/cli/commands/report.js";
 import { replCommand } from "../src/cli/commands/repl.js";
+import { runGenerationCommand } from "../src/cli/commands/run-generation.js";
 import { runTaskCommand } from "../src/cli/commands/run-task.js";
 
 /**
@@ -37,6 +38,7 @@ const COMMANDS: readonly CliCommand[] = [
   reportCommand,
   configCommand,
   replCommand,
+  runGenerationCommand,
 ];
 
 const NAME_WIDTH = 12;

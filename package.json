@@ -13,6 +13,7 @@
     "test": "tsx --test \"test/**/*.test.ts\"",
     "harness": "tsx scripts/harness.ts",
     "run-task": "tsx scripts/run-task.ts",
+    "run-generation": "tsx scripts/run-generation.ts",
     "replay-run": "tsx scripts/replay-run.ts",
     "report": "tsx scripts/report.ts"
   },

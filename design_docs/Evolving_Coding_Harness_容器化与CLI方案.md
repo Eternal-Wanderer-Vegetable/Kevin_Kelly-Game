@@ -219,6 +219,15 @@ scripts/
 - `harness config`：打印解析后的 `HarnessConfig`，遮蔽密钥只显示是否已设置。部署排障的第一站。
 - `harness repl [--task <spec.json>] [--goal <text>] [--provider local|external|mock]`：交互式会话。
 
+`run-generation` 接收 schema version 1 的 JSON 计划。计划顶层包含
+`schemaVersion`、`mode`、`config` 和对应的 `task` 或 `plan`；`mode` 为
+`calibration` 时运行一个 baseline/candidate 对照，`mode` 为
+`generalization` 时运行 evolution、validation、holdout 三个互不重叠的分区。
+命令会追加 `GENERATION_STARTED`、每次运行一个
+`EXPERIMENT_RUN_COMPLETED`，以及 `GENERATION_COMPLETED` 事件。校准即使
+候选失败也返回 0 供继续分析；泛化会打印完整报告，并在 holdout 未通过
+预提交阈值时返回 1。
+
 ### 5.4 交互式 REPL
 
 把 ink 隔离在动态 import 之后。`src/cli/commands/repl.ts` 负责解析参数、`loadConfig`、构造 Provider、`createSandboxWorkspace`、构造 `SandboxToolEnvironment` 与 `AgentCore`，组装出纯逻辑的 `ReplSession`（位于 `src/cli/tui/session.ts`，不 import ink），然后才 `await import()` 渲染层。
@@ -392,6 +401,8 @@ docker compose run --rm harness repl --goal "..." < /dev/null
 > 注：Phase 5 已完成。（2026-09-08）
 
 **Phase 6 单代实验命令。** 装配校准与泛化运行器，补齐落地方案第 4 节列出的缺失脚本。
+
+> 注：Phase 6 已完成。（2026-09-08）
 
 ## 8. 两项工作之间的冲突点
 

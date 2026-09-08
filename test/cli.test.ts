@@ -122,10 +122,17 @@ test("report exposes run and format help", async () => {
   assert.match(output, /--format <json\|text>/);
 });
 
+test("run-generation exposes plan and format help", async () => {
+  const output = await runHelp("run-generation");
+  assert.match(output, /Run one calibration or generalization experiment generation/);
+  assert.match(output, /--plan <path>/);
+  assert.match(output, /--format <json\|text>/);
+});
+
 test("harness lists every subcommand", async () => {
   const output = await runHelp("harness");
   assert.match(output, /harness <command> \[options\]/);
-  for (const name of ["run-task", "replay-run", "report", "config"]) {
+  for (const name of ["run-task", "replay-run", "report", "config", "run-generation"]) {
     assert.match(output, new RegExp(name));
   }
 });
