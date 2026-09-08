@@ -71,6 +71,17 @@ npm run harness      显示 Harness 根命令帮助
 
 CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。实验编排能力也可以直接通过 `src/experiment/` 下的 TypeScript 模块使用。
 
+## 容器化部署
+
+```bash
+docker build --target runtime -t evolving-coding-harness:dev .
+docker compose run --rm harness --help
+```
+
+Python 变体使用 `--target runtime-python` 构建。Compose 卷映射、模型地址、
+资源限制和容器安全边界见
+[`docs/container-deployment.zh-CN.md`](docs/container-deployment.zh-CN.md)。
+
 ## 架构
 
 系统分为三个边界：

@@ -385,6 +385,8 @@ docker compose run --rm harness repl --goal "..." < /dev/null
 
 **Phase 4 容器化。** Dockerfile 三个 target、`.dockerignore`、`docker-compose.yml`、目录占位文件、部署文档。安排在 ink 之前，使镜像先在零依赖状态下验证通过，避免 ink 引入的问题与容器问题相互纠缠。
 
+> 注：Phase 4 已完成。（2026-09-08）
+
 **Phase 5 交互式 REPL。** 先实现并测试纯逻辑的 `ReplSession`，再加 `tsconfig.tui.json` 与依赖，然后是渲染组件、动态 import 与无 TTY 回退，最后更新镜像构建步骤并重新验证。
 
 **Phase 6 单代实验命令。** 装配校准与泛化运行器，补齐落地方案第 4 节列出的缺失脚本。

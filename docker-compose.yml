@@ -1,0 +1,34 @@
+services:
+  harness:
+    build:
+      context: .
+      target: ${HARNESS_BUILD_TARGET:-runtime}
+    image: ${HARNESS_IMAGE:-evolving-coding-harness:dev}
+    init: true
+    stdin_open: true
+    tty: true
+    environment:
+      HARNESS_DATA_DIR: /app/data
+      HARNESS_EVENT_LOG: /app/data/runs/events.jsonl
+      HARNESS_DEFAULT_ENERGY: ${HARNESS_DEFAULT_ENERGY:-100}
+      HARNESS_LOCAL_MODEL_URL: ${HARNESS_LOCAL_MODEL_URL:-http://host.docker.internal:8000/v1}
+      HARNESS_EXTERNAL_MODEL_URL: ${HARNESS_EXTERNAL_MODEL_URL:-}
+      HARNESS_LOCAL_MODEL_KEY:
+      HARNESS_EXTERNAL_MODEL_KEY:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/app/data
+      - ./experiments:/app/experiments
+    tmpfs:
+      - /tmp:size=512m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 2g
+
+    # A local model service can be added to this Compose project and addressed
+    # as http://model:8000/v1. Do not use 127.0.0.1 for a service outside this
+    # container: it resolves to the harness container itself.

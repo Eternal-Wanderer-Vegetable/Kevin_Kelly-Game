@@ -3,4 +3,6 @@ dist/
 data/runs/
 data/agents/
 data/archive/
+experiments/*
+!experiments/.gitkeep
 *.log

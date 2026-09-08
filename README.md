@@ -72,6 +72,18 @@ npm run harness      Show the root harness CLI help
 
 The command-line helpers currently expose the stable interfaces and help contracts used by the MVP. Experiment orchestration is also available directly through the TypeScript modules under `src/experiment/`.
 
+## Container Deployment
+
+```bash
+docker build --target runtime -t evolving-coding-harness:dev .
+docker compose run --rm harness --help
+```
+
+The Python variant is available with `--target runtime-python`. See
+[`docs/container-deployment.md`](docs/container-deployment.md) for Compose
+volumes, model endpoint configuration, resource limits, and the container
+security boundary.
+
 ## Architecture
 
 The system is organized around three boundaries:
