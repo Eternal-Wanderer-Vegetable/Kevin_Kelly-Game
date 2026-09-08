@@ -104,6 +104,145 @@ Python 变体使用 `--target runtime-python` 构建。Compose 卷映射、模�
 GHCR，并把可运行归档附加到 GitHub Release。稳定版本会更新 `latest` 镜像标签；
 例如 `v0.2.0-rc.1` 这样的预发布版本不会更新它。
 
+## 使用 Release
+
+下面的命令将 `v0.1.0` 作为示例，请替换为需要使用的 Release 标签。每个
+Release 提供两种等价的分发方式：
+
+### Release 归档包
+
+归档包包含编译后的 CLI、部署文件和文档，但不包含 `node_modules`。解压后需要
+安装一次生产依赖。归档包应直接通过 `dist` 运行，不需要使用面向源码的
+`npm run` 脚本。
+
+```bash
+RELEASE_TAG=v0.1.0
+ARCHIVE="evolving-coding-harness-${RELEASE_TAG}.tar.gz"
+curl -fL -o "$ARCHIVE" \
+  "https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/releases/download/${RELEASE_TAG}/${ARCHIVE}"
+tar -xzf "$ARCHIVE"
+cd "evolving-coding-harness-${RELEASE_TAG}"
+
+npm ci --omit=dev
+node dist/scripts/harness.js --help
+node dist/scripts/harness.js config
+node dist/scripts/harness.js repl --provider mock --goal "检查工作区"
+```
+
+PowerShell 下可以这样下载和解压：
+
+```powershell
+$releaseTag = "v0.1.0"
+$archive = "evolving-coding-harness-$releaseTag.tar.gz"
+Invoke-WebRequest `
+  -Uri "https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/releases/download/$releaseTag/$archive" `
+  -OutFile $archive
+tar -xzf $archive
+Set-Location "evolving-coding-harness-$releaseTag"
+
+npm ci --omit=dev
+node dist/scripts/harness.js --help
+```
+
+编译后的入口包括：
+
+```text
+node dist/scripts/harness.js <command> ...
+node dist/scripts/run-task.js --task <task-spec.json>
+node dist/scripts/run-generation.js --plan <plan.json>
+node dist/scripts/replay-run.js --input <events.jsonl>
+node dist/scripts/report.js --input <events.jsonl>
+```
+
+交互式工作流从 `repl` 开始。使用 `--provider mock` 可以执行本地冒烟测试；
+使用 `--provider local` 连接 OpenAI-compatible 本地模型；使用
+`--provider external` 连接已配置的外部模型端点。执行
+`node dist/scripts/harness.js <command> --help` 可以查看任意命令的选项。
+
+### GHCR 镜像
+
+标准镜像和包含 Python 的镜像使用不同的镜像名称：
+
+```text
+ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:<version>
+ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game-python:<version>
+```
+
+例如，稳定版 `v0.1.0` 可以这样拉取和启动：
+
+```bash
+IMAGE=ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:0.1.0
+docker pull "$IMAGE"
+docker run --rm "$IMAGE" --help
+mkdir -p data experiments
+docker run --rm -it \
+  -v "$PWD/data:/app/data" \
+  -v "$PWD/experiments:/app/experiments" \
+  "$IMAGE" repl --provider mock --goal "检查工作区"
+```
+
+如果任务需要 `python3` 或 `python3-venv`，请使用带 `-python` 的镜像名称：
+
+```bash
+IMAGE=ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game-python:0.1.0
+docker pull "$IMAGE"
+docker run --rm "$IMAGE" --help
+```
+
+Python 镜像只提供解释器。任务仍必须在
+`TaskSpec.allowedCommands` 中包含 `python3`。
+
+也可以通过归档包内附带的 Compose 文件使用已发布镜像：
+
+```bash
+export HARNESS_IMAGE=ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:0.1.0
+mkdir -p data experiments
+docker compose pull
+docker compose run --rm -it harness repl --provider mock --goal "检查工作区"
+```
+
+PowerShell 下，先设置镜像变量，再执行相同的 Compose 命令：
+
+```powershell
+$env:HARNESS_IMAGE = "ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:0.1.0"
+New-Item -ItemType Directory -Force data, experiments | Out-Null
+docker compose pull
+docker compose run --rm -it harness repl --provider mock --goal "检查工作区"
+```
+
+`data` 和 `experiments` 卷映射会保留事件日志与实验产物。稳定版本会发布
+`0.1.0`、`0.1` 和 `latest` 标签；预发布版本会发布完整版本标签，例如
+`0.2.0-rc.1`，但不会移动 `latest`。
+
+### 模型配置
+
+默认的冒烟测试 provider 是 `mock`，不需要模型服务。使用本地
+OpenAI-compatible 服务时，在启动 CLI 或容器前配置端点和可选凭据：
+
+```bash
+export HARNESS_LOCAL_MODEL_URL=http://127.0.0.1:8000/v1
+export HARNESS_LOCAL_MODEL_KEY=replace-me
+export HARNESS_LOCAL_MODEL_NAME=local-model
+node dist/scripts/harness.js config
+node dist/scripts/harness.js repl --provider local --goal "检查工作区"
+```
+
+在容器中使用本地模型时，设置相同的变量，然后改为调用 Compose 服务：
+
+```bash
+export HARNESS_LOCAL_MODEL_URL=http://host.docker.internal:8000/v1
+export HARNESS_LOCAL_MODEL_KEY=replace-me
+export HARNESS_LOCAL_MODEL_NAME=local-model
+docker compose run --rm -it harness repl --provider local --goal "检查工作区"
+```
+
+使用 external tier 时，设置 `HARNESS_EXTERNAL_MODEL_URL`、
+`HARNESS_EXTERNAL_MODEL_KEY`，以及可选的 `HARNESS_EXTERNAL_MODEL_NAME`，然后
+使用 `--provider external`。如果模型运行在宿主机上，容器用户应使用
+`http://host.docker.internal:8000/v1`；如果模型运行在同一个 Compose 项目中，
+应使用 Compose 服务名。在容器内部不要用 `127.0.0.1` 指代宿主机或其他容器中的
+服务。
+
 ## 架构
 
 系统分为三个边界：

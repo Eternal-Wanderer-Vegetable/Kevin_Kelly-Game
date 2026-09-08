@@ -104,6 +104,151 @@ images to GHCR, and attaches a runnable archive to the GitHub Release. Stable
 tags also update the `latest` image tag; prerelease tags such as `v0.2.0-rc.1`
 do not.
 
+## Using a Release
+
+Replace `v0.1.0` below with the release tag you want to use. A release provides
+two equivalent distribution paths:
+
+### Release archive
+
+The archive contains the compiled CLI, deployment files, and documentation. It
+does not contain `node_modules`, so install production dependencies once after
+extracting it. The archive is intentionally run through `dist`; its source-only
+`npm run` scripts are not needed in a release package.
+
+```bash
+RELEASE_TAG=v0.1.0
+ARCHIVE="evolving-coding-harness-${RELEASE_TAG}.tar.gz"
+curl -fL -o "$ARCHIVE" \
+  "https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/releases/download/${RELEASE_TAG}/${ARCHIVE}"
+tar -xzf "$ARCHIVE"
+cd "evolving-coding-harness-${RELEASE_TAG}"
+
+npm ci --omit=dev
+node dist/scripts/harness.js --help
+node dist/scripts/harness.js config
+node dist/scripts/harness.js repl --provider mock --goal "inspect the workspace"
+```
+
+On PowerShell, the download and extraction can be written as:
+
+```powershell
+$releaseTag = "v0.1.0"
+$archive = "evolving-coding-harness-$releaseTag.tar.gz"
+Invoke-WebRequest `
+  -Uri "https://github.com/Eternal-Wanderer-Vegetable/Kevin_Kelly-Game/releases/download/$releaseTag/$archive" `
+  -OutFile $archive
+tar -xzf $archive
+Set-Location "evolving-coding-harness-$releaseTag"
+
+npm ci --omit=dev
+node dist/scripts/harness.js --help
+```
+
+The compiled entry points are:
+
+```text
+node dist/scripts/harness.js <command> ...
+node dist/scripts/run-task.js --task <task-spec.json>
+node dist/scripts/run-generation.js --plan <plan.json>
+node dist/scripts/replay-run.js --input <events.jsonl>
+node dist/scripts/report.js --input <events.jsonl>
+```
+
+For the interactive workflow, start with `repl`. Use
+`--provider mock` for a local smoke test, `--provider local` for an
+OpenAI-compatible local model, or `--provider external` for a configured
+external endpoint. Run `node dist/scripts/harness.js <command> --help` for the
+options of any command.
+
+### GHCR images
+
+The standard and Python-enabled images are published under separate image
+names:
+
+```text
+ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:<version>
+ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game-python:<version>
+```
+
+For example, the stable `v0.1.0` release can be pulled and started with:
+
+```bash
+IMAGE=ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:0.1.0
+docker pull "$IMAGE"
+docker run --rm "$IMAGE" --help
+mkdir -p data experiments
+docker run --rm -it \
+  -v "$PWD/data:/app/data" \
+  -v "$PWD/experiments:/app/experiments" \
+  "$IMAGE" repl --provider mock --goal "inspect the workspace"
+```
+
+Use the `-python` image name when tasks need `python3` or `python3-venv`:
+
+```bash
+IMAGE=ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game-python:0.1.0
+docker pull "$IMAGE"
+docker run --rm "$IMAGE" --help
+```
+
+The Python image only provides the interpreter. A task must still include
+`python3` in `TaskSpec.allowedCommands`.
+
+To use the published image through the included Compose file:
+
+```bash
+export HARNESS_IMAGE=ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:0.1.0
+mkdir -p data experiments
+docker compose pull
+docker compose run --rm -it harness repl --provider mock --goal "inspect the workspace"
+```
+
+On PowerShell, set the image before running the same Compose commands:
+
+```powershell
+$env:HARNESS_IMAGE = "ghcr.io/eternal-wanderer-vegetable/kevin_kelly-game:0.1.0"
+New-Item -ItemType Directory -Force data, experiments | Out-Null
+docker compose pull
+docker compose run --rm -it harness repl --provider mock --goal "inspect the workspace"
+```
+
+The `data` and `experiments` mounts preserve event logs and experiment
+artifacts. Stable releases publish `0.1.0`, `0.1`, and `latest` tags; a
+prerelease publishes its full version tag, such as `0.2.0-rc.1`, but does not
+move `latest`.
+
+### Model configuration
+
+The default smoke-test provider is `mock` and does not need a model service.
+For a local OpenAI-compatible service, configure the endpoint and optional
+credentials before starting the CLI or container:
+
+```bash
+export HARNESS_LOCAL_MODEL_URL=http://127.0.0.1:8000/v1
+export HARNESS_LOCAL_MODEL_KEY=replace-me
+export HARNESS_LOCAL_MODEL_NAME=local-model
+node dist/scripts/harness.js config
+node dist/scripts/harness.js repl --provider local --goal "inspect the workspace"
+```
+
+For a containerized local-model session, set the same variables and invoke the
+Compose service instead:
+
+```bash
+export HARNESS_LOCAL_MODEL_URL=http://host.docker.internal:8000/v1
+export HARNESS_LOCAL_MODEL_KEY=replace-me
+export HARNESS_LOCAL_MODEL_NAME=local-model
+docker compose run --rm -it harness repl --provider local --goal "inspect the workspace"
+```
+
+For the external tier, set `HARNESS_EXTERNAL_MODEL_URL`,
+`HARNESS_EXTERNAL_MODEL_KEY`, and optionally `HARNESS_EXTERNAL_MODEL_NAME`, then
+use `--provider external`. Container users should use
+`http://host.docker.internal:8000/v1` for a model running on the host, or the
+Compose service name for a model running in the same Compose project. Do not
+use `127.0.0.1` to refer to either of those services from inside a container.
+
 ## Architecture
 
 The system is organized around three boundaries:
