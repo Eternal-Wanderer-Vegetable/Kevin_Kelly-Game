@@ -96,6 +96,14 @@ Python 变体使用 `--target runtime-python` 构建。Compose 卷映射、模�
 资源限制和容器安全边界见
 [`docs/container-deployment.zh-CN.md`](docs/container-deployment.zh-CN.md)。
 
+## Release 自动发布
+
+推送 `v0.1.0` 这样的语义化版本标签后，会启动
+[`.github/workflows/release.yml`](.github/workflows/release.yml)。流程会先执行
+类型检查、构建和测试，再将 `runtime` 与 `runtime-python` 两个镜像发布到
+GHCR，并把可运行归档附加到 GitHub Release。稳定版本会更新 `latest` 镜像标签；
+例如 `v0.2.0-rc.1` 这样的预发布版本不会更新它。
+
 ## 架构
 
 系统分为三个边界：

@@ -404,6 +404,13 @@ docker compose run --rm harness repl --goal "..." < /dev/null
 
 > 注：Phase 6 已完成。（2026-09-08）
 
+**Phase 7 自动发布 CI。** 由 GitHub Actions 监听 `v*.*.*` 标签，先执行
+typecheck、build 和 test，再构建并推送 `runtime` 与 `runtime-python` 两个
+GHCR 镜像，最后创建 GitHub Release 并附加运行时归档。稳定标签维护
+`latest`，预发布标签不覆盖 `latest`。
+
+> 注：Phase 7 已完成。（2026-09-08）
+
 ## 8. 两项工作之间的冲突点
 
 1. **ink 需要 TTY，容器默认没有。** 在动态 import 之前检查 `process.stdout.isTTY`，无 TTY 时走逐行文本模式；编排中提供 `stdin_open` 与 `tty`；验证清单显式覆盖无 TTY 路径。
