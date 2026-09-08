@@ -34,6 +34,7 @@
 - Clone、结构化 Mutation 与 Embryo 资格检查
 - Agent 生命周期、Population Snapshot 与共享 SLM 队列
 - 参数校准实验与 holdout 泛化评估
+- 使用真实 Sandbox 工作区的交互式 REPL，以及无 TTY 文本回退
 
 仓库仍然是实验性 MVP，暂不提供分布式执行、多 Agent 协作、自动任务生成或生产级持久化层。
 
@@ -67,9 +68,13 @@ npm run run-task     显示任务运行器帮助
 npm run replay-run   显示事件重放帮助
 npm run report       显示报告命令帮助
 npm run harness      显示 Harness 根命令帮助
+npm run harness -- repl --provider mock --goal "检查工作区"
 ```
 
-CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。实验编排能力也可以直接通过 `src/experiment/` 下的 TypeScript 模块使用。
+CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。使用
+`npm run harness -- repl` 启动 Observe -> Think -> Act 交互会话。Ink 只在 TTY
+渲染路径中动态加载；非交互命令、CI 和文本回退不会加载它。实验编排能力也可以
+直接通过 `src/experiment/` 下的 TypeScript 模块使用。
 
 ## 容器化部署
 

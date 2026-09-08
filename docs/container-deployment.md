@@ -29,6 +29,7 @@ mkdir -p data experiments
 docker compose up -d
 docker compose run --rm harness --help
 docker compose run --rm harness config
+docker compose run --rm -it harness repl --provider mock --goal "inspect the workspace"
 ```
 
 The Compose service is a command runner rather than a long-lived daemon:
@@ -74,4 +75,10 @@ For a non-interactive smoke test:
 
 ```bash
 docker compose run --rm harness --help < /dev/null
+docker compose run --rm harness repl --provider mock --goal "smoke test" < /dev/null
 ```
+
+The REPL uses Ink when a TTY is available. Without a TTY it switches to a
+line-oriented mode, so the second smoke test should print the fallback banner
+and exit cleanly at end of input. Use `/help` to list commands such as
+`/step`, `/run`, `/files`, `/patch`, and `/reset`.

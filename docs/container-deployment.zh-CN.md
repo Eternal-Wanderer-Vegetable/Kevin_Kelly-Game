@@ -28,6 +28,7 @@ mkdir -p data experiments
 docker compose up -d
 docker compose run --rm harness --help
 docker compose run --rm harness config
+docker compose run --rm -it harness repl --provider mock --goal "检查工作区"
 ```
 
 Compose 服务是命令执行容器，不是长期运行的 daemon：`docker compose up`
@@ -65,4 +66,9 @@ Sandbox 工作区位于 `/tmp`。tmpfs 大小同时也是内存上限，较大�
 
 ```bash
 docker compose run --rm harness --help < /dev/null
+docker compose run --rm harness repl --provider mock --goal "冒烟测试" < /dev/null
 ```
+
+REPL 在有 TTY 时使用 Ink；没有 TTY 时自动切换为逐行文本模式，因此第二条
+冒烟命令应打印回退提示，并在输入结束时正常退出。使用 `/help` 可查看
+`/step`、`/run`、`/files`、`/patch` 和 `/reset` 等命令。

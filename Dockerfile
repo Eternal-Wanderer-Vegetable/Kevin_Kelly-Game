@@ -8,6 +8,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY tsconfig.json ./
+COPY tsconfig.tui.json ./
 COPY src ./src
 COPY scripts ./scripts
 COPY test ./test

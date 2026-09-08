@@ -389,6 +389,8 @@ docker compose run --rm harness repl --goal "..." < /dev/null
 
 **Phase 5 交互式 REPL。** 先实现并测试纯逻辑的 `ReplSession`，再加 `tsconfig.tui.json` 与依赖，然后是渲染组件、动态 import 与无 TTY 回退，最后更新镜像构建步骤并重新验证。
 
+> 注：Phase 5 已完成。（2026-09-08）
+
 **Phase 6 单代实验命令。** 装配校准与泛化运行器，补齐落地方案第 4 节列出的缺失脚本。
 
 ## 8. 两项工作之间的冲突点
