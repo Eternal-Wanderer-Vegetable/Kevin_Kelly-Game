@@ -85,9 +85,40 @@ generalization report that fails its holdout checks exits with status 1.
 
 ## Container Deployment
 
+Docker Compose now wraps the image build, data directories, runtime hardening,
+and interactive REPL. After installing Docker Desktop or Docker Engine with
+Compose, run:
+
 ```bash
-docker build --target runtime -t evolving-coding-harness:dev .
+./deploy.sh
+```
+
+On Windows PowerShell:
+
+```powershell
+.\deploy.ps1
+```
+
+The default `mock` provider is a credential-free smoke test. To use a
+published image:
+
+```bash
+./deploy.sh --release
+./deploy.sh --release 0.1.0 --python
+```
+
+For a real model, copy `.env.example` to `.env`, set
+`HARNESS_LOCAL_MODEL_URL`, `HARNESS_LOCAL_MODEL_KEY`, and
+`HARNESS_LOCAL_MODEL_NAME`, then run `./deploy.sh --provider local`. The
+launcher creates `data/` and `experiments/` and preserves the existing bind
+mounts.
+
+For diagnostics or other CLI commands, the lower-level Compose entry point
+remains available:
+
+```bash
 docker compose run --rm harness --help
+docker compose run --rm harness config
 ```
 
 The Python variant is available with `--target runtime-python`. See

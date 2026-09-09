@@ -1,5 +1,39 @@
 # Container Deployment
 
+## One-command startup
+
+After installing Docker Desktop or Docker Engine with Compose, use the launcher
+from the repository root:
+
+```bash
+./deploy.sh
+```
+
+On Windows PowerShell:
+
+```powershell
+.\deploy.ps1
+```
+
+The launcher checks Docker, creates `data/` and `experiments/`, validates the
+Compose file, builds the current checkout image, and starts the interactive
+REPL. The default provider is the credential-free `mock` provider, which makes
+it suitable for an initial deployment smoke test.
+
+Common options:
+
+```bash
+./deploy.sh --provider local --goal "inspect the workspace"
+./deploy.sh --release
+./deploy.sh --release 0.1.0 --python
+```
+
+You can also copy `.env.example` to `.env` to configure the provider, goal,
+image, and model endpoints. Keep API keys in the local `.env` or shell
+environment; do not commit them.
+
+## Manual container commands
+
 The repository ships a multi-stage Dockerfile with three targets:
 
 - `builder` installs development dependencies and runs typecheck plus build.
@@ -21,21 +55,20 @@ allowlist remains the hard boundary.
 
 ## Compose
 
-Create the bind-mount directories before starting Compose. They are committed
-with `.gitkeep` so Docker does not create them as root:
+The launcher is optional. For manual Compose use, the bind-mount directories
+are committed with `.gitkeep` so Docker does not create them as root:
 
 ```bash
 mkdir -p data experiments
-docker compose up -d
 docker compose run --rm harness --help
 docker compose run --rm harness config
 docker compose run --rm -it harness repl --provider mock --goal "inspect the workspace"
 ```
 
-The Compose service is a command runner rather than a long-lived daemon:
-`docker compose up` executes the default root help command and exits. Use
-`docker compose run --rm harness <command>` for experiments, or provide an
-explicit command when using `up`.
+The Compose service is a command runner rather than a long-lived daemon. With
+no explicit command, `docker compose run --rm -it harness` enters the default
+REPL; other commands continue to use `docker compose run --rm harness <command>`.
+Do not treat `docker compose up` as a background service manager.
 
 The service mounts `./data` at `/app/data` and `./experiments` at
 `/app/experiments`. It also gives the Sandbox a 512 MiB `/tmp` tmpfs, enables

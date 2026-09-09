@@ -13,6 +13,8 @@ services:
       HARNESS_DEFAULT_ENERGY: ${HARNESS_DEFAULT_ENERGY:-100}
       HARNESS_LOCAL_MODEL_URL: ${HARNESS_LOCAL_MODEL_URL:-http://host.docker.internal:8000/v1}
       HARNESS_EXTERNAL_MODEL_URL: ${HARNESS_EXTERNAL_MODEL_URL:-}
+      HARNESS_LOCAL_MODEL_NAME: ${HARNESS_LOCAL_MODEL_NAME:-}
+      HARNESS_EXTERNAL_MODEL_NAME: ${HARNESS_EXTERNAL_MODEL_NAME:-}
       HARNESS_LOCAL_MODEL_KEY:
       HARNESS_EXTERNAL_MODEL_KEY:
     extra_hosts:
@@ -28,6 +30,12 @@ services:
       - ALL
     pids_limit: 256
     mem_limit: 2g
+    command:
+      - repl
+      - --provider
+      - ${HARNESS_PROVIDER:-mock}
+      - --goal
+      - ${HARNESS_GOAL:-Explore the sandbox workspace}
 
     # A local model service can be added to this Compose project and addressed
     # as http://model:8000/v1. Do not use 127.0.0.1 for a service outside this
