@@ -333,6 +333,23 @@ design_docs/      Architecture and implementation plans
 
 ## Reproducible Experiments
 
+### Run one real model-driven repair
+
+With Node.js 24+, Docker running, and `HARNESS_EXTERNAL_MODEL_URL`,
+`HARNESS_EXTERNAL_MODEL_NAME`, and the optional `HARNESS_EXTERNAL_MODEL_KEY` set:
+
+```bash
+docker pull node:24-alpine
+npm run run-repair -- --task examples/repair/median.json --output experiments/repair --max-turns 12
+```
+
+The command records a failing baseline, runs a bounded model/tool loop, and grades
+only the candidate source against fixed private tests in fresh containers. It saves
+the task, candidate, changes, turn events, report, and checksums in a unique run directory.
+Exit code 0 means independent acceptance passed; failures return 1. This demonstrates
+single-task repair, not multi-generation evolution. See the
+[detailed experiment guide (Chinese)](docs/first-repair-experiment.zh-CN.md).
+
 Experiments should record:
 
 - The repository commit and fixed task input commit

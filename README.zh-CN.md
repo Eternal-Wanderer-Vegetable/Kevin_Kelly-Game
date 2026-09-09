@@ -323,6 +323,19 @@ design_docs/      架构与落地方案
 
 ## 可复现实验
 
+### 跑一次真实模型修复实验
+
+`run-repair` 已接通模型驱动的代码修复、固定原版对照、Docker 独立验收及完整实验记录：
+
+```powershell
+docker pull node:24-alpine
+# 先设置 HARNESS_EXTERNAL_MODEL_URL、HARNESS_EXTERNAL_MODEL_NAME 和模型密钥环境变量。
+npm run run-repair -- --task examples/repair/median.json --output experiments/repair --max-turns 12
+```
+
+需要 Node.js 24+ 和可用的 Docker 引擎。完整配置、产物说明、验证命令和适用范围见
+[第一次真实模型修复实验](docs/first-repair-experiment.zh-CN.md)。该实验验证单任务修复能力，尚不证明多代演化提升。
+
 实验应记录：
 
 - 仓库 commit 与固定任务输入 commit
