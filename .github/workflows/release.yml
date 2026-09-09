@@ -62,6 +62,9 @@ jobs:
             docs \
             Dockerfile \
             docker-compose.yml \
+            deploy.sh \
+            deploy.ps1 \
+            .env.example \
             LICENSE \
             README.md \
             README.zh-CN.md \

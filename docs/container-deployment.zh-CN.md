@@ -1,5 +1,36 @@
 # 容器化部署
 
+## 一键启动
+
+安装 Docker Desktop 或 Docker Engine + Compose 后，推荐使用仓库根目录的启动脚本：
+
+```bash
+./deploy.sh
+```
+
+Windows PowerShell：
+
+```powershell
+.\deploy.ps1
+```
+
+脚本会检查 Docker、创建 `data/` 与 `experiments/`、校验 Compose 配置，
+然后构建当前 checkout 的镜像并启动交互式 REPL。默认 provider 是不需要密钥的
+`mock`，因此可以先用它完成部署冒烟。
+
+常用选项：
+
+```bash
+./deploy.sh --provider local --goal "检查工作区"
+./deploy.sh --release
+./deploy.sh --release 0.1.0 --python
+```
+
+也可以复制 `.env.example` 为 `.env`，集中配置 provider、goal、镜像和模型地址。
+API 密钥只放在本地 `.env` 或 shell 环境中，不要提交到仓库。
+
+## 手动容器命令
+
 仓库提供一个包含三个 target 的多阶段 Dockerfile：
 
 - `builder` 安装开发依赖并执行类型检查和构建。
@@ -20,20 +51,20 @@ Python 镜像只负责让容器内存在 Python。任务仍必须在
 
 ## Compose
 
-启动 Compose 前先创建 bind mount 目录。仓库已经用 `.gitkeep` 保留这些目录，
-避免 Docker 以 root 身份创建它们：
+启动脚本之外，也可以手动运行 Compose。仓库已经用 `.gitkeep` 保留 bind mount
+目录，避免 Docker 以 root 身份创建它们：
 
 ```bash
 mkdir -p data experiments
-docker compose up -d
 docker compose run --rm harness --help
 docker compose run --rm harness config
 docker compose run --rm -it harness repl --provider mock --goal "检查工作区"
 ```
 
-Compose 服务是命令执行容器，不是长期运行的 daemon：`docker compose up`
-会执行默认的根命令帮助后退出。执行实验时请使用
-`docker compose run --rm harness <command>`，或者在使用 `up` 时显式提供命令。
+Compose 服务是命令执行容器，不是长期运行的 daemon。无额外 command 时，
+`docker compose run --rm -it harness` 会进入默认 REPL；其他命令继续使用
+`docker compose run --rm harness <command>`。不要把 `docker compose up` 当作
+后台服务管理器。
 
 服务将 `./data` 挂载到 `/app/data`，将 `./experiments` 挂载到
 `/app/experiments`。`/tmp` 使用 512 MiB 的 tmpfs，并启用 init 进程回收孤儿

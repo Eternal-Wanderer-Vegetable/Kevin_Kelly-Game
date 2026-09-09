@@ -87,9 +87,36 @@ CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。�
 
 ## 容器化部署
 
+Docker Compose 已经封装了构建、数据目录、运行时安全边界和交互式 REPL。
+在安装 Docker Desktop 或 Docker Engine + Compose 后，推荐直接执行：
+
 ```bash
-docker build --target runtime -t evolving-coding-harness:dev .
+./deploy.sh
+```
+
+Windows PowerShell：
+
+```powershell
+.\deploy.ps1
+```
+
+默认使用 `mock` provider 做无密钥冒烟。使用已发布镜像时：
+
+```bash
+./deploy.sh --release
+./deploy.sh --release 0.1.0 --python
+```
+
+真实模型可以先复制 `.env.example` 为 `.env`，填写
+`HARNESS_LOCAL_MODEL_URL`、`HARNESS_LOCAL_MODEL_KEY` 和
+`HARNESS_LOCAL_MODEL_NAME`，再执行 `./deploy.sh --provider local`。
+启动脚本会自动创建 `data/` 与 `experiments/`，并保留现有卷映射。
+
+需要排查或运行其他 CLI 子命令时，仍可使用底层 Compose 命令：
+
+```bash
 docker compose run --rm harness --help
+docker compose run --rm harness config
 ```
 
 Python 变体使用 `--target runtime-python` 构建。Compose 卷映射、模型地址、
