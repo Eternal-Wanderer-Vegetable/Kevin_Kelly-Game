@@ -64,6 +64,7 @@ npm run dev          启动项目入口
 npm run typecheck    运行 TypeScript 类型检查，不生成文件
 npm run build        将 TypeScript 编译到 dist/
 npm test             运行测试套件
+npm run deploy       通过 Docker Compose 启动容器化 REPL（等价于 node deploy.mjs）
 npm run run-task     显示任务运行器帮助
 npm run run-generation
                      运行一代校准或泛化实验
@@ -88,28 +89,26 @@ CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。�
 ## 容器化部署
 
 Docker Compose 已经封装了构建、数据目录、运行时安全边界和交互式 REPL。
-在安装 Docker Desktop 或 Docker Engine + Compose 后，推荐直接执行：
+在安装 Docker Desktop 或 Docker Engine + Compose 以及 Node.js 后，推荐直接执行：
 
 ```bash
-./deploy.sh
+node deploy.mjs
 ```
 
-Windows PowerShell：
-
-```powershell
-.\deploy.ps1
-```
+启动器是一个纯 Node 脚本（别名 `npm run deploy`），在 cmd、PowerShell、
+Git Bash 和 POSIX shell 中行为完全一致，不会被 Windows 的 PowerShell
+执行策略拦截（旧的 `deploy.ps1` 正是因此被淘汰）。
 
 默认使用 `mock` provider 做无密钥冒烟。使用已发布镜像时：
 
 ```bash
-./deploy.sh --release
-./deploy.sh --release 0.1.0 --python
+node deploy.mjs --release
+node deploy.mjs --release 0.1.0 --python
 ```
 
 真实模型可以先复制 `.env.example` 为 `.env`，填写
 `HARNESS_LOCAL_MODEL_URL`、`HARNESS_LOCAL_MODEL_KEY` 和
-`HARNESS_LOCAL_MODEL_NAME`，再执行 `./deploy.sh --provider local`。
+`HARNESS_LOCAL_MODEL_NAME`，再执行 `node deploy.mjs --provider local`。
 启动脚本会自动创建 `data/` 与 `experiments/`，并保留现有卷映射。
 
 需要排查或运行其他 CLI 子命令时，仍可使用底层 Compose 命令：
@@ -180,6 +179,11 @@ node dist/scripts/run-generation.js --plan <plan.json>
 node dist/scripts/replay-run.js --input <events.jsonl>
 node dist/scripts/report.js --input <events.jsonl>
 ```
+
+执行 `npm ci --omit=dev` 后，npm 会根据 `package.json` 中的 `bin` 字段生成
+`harness` 命令，因此 `npx harness <command> ...` 与
+`node dist/scripts/harness.js <command> ...` 等价。在 Windows 受限执行策略
+下，请在 PowerShell 中改用 `npx.cmd harness ...`，或使用 cmd / Git Bash。
 
 交互式工作流从 `repl` 开始。使用 `--provider mock` 可以执行本地冒烟测试；
 使用 `--provider local` 连接 OpenAI-compatible 本地模型；使用

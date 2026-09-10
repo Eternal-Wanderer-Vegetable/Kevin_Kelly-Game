@@ -2,17 +2,17 @@
 
 ## 一键启动
 
-安装 Docker Desktop 或 Docker Engine + Compose 后，推荐使用仓库根目录的启动脚本：
+安装 Docker Desktop 或 Docker Engine + Compose 以及 Node.js 后，推荐使用仓库根目录的启动脚本：
 
 ```bash
-./deploy.sh
+node deploy.mjs
 ```
 
-Windows PowerShell：
-
-```powershell
-.\deploy.ps1
-```
+启动器是一个纯 Node 脚本，同一条命令在 cmd、PowerShell、Git Bash 和 POSIX
+shell 中都能使用，不受 Windows PowerShell 执行策略限制（旧 `.ps1` 启动脚本
+正是因此被淘汰）。`npm run deploy` 是它的别名，但注意受限执行策略下
+PowerShell 中 `npm` 自身的 `.ps1` shim 也可能被拦截——`node deploy.mjs`
+始终可用。
 
 脚本会检查 Docker、创建 `data/` 与 `experiments/`、校验 Compose 配置，
 然后构建当前 checkout 的镜像并启动交互式 REPL。默认 provider 是不需要密钥的
@@ -21,9 +21,9 @@ Windows PowerShell：
 常用选项：
 
 ```bash
-./deploy.sh --provider local --goal "检查工作区"
-./deploy.sh --release
-./deploy.sh --release 0.1.0 --python
+node deploy.mjs --provider local --goal "检查工作区"
+node deploy.mjs --release
+node deploy.mjs --release 0.1.0 --python
 ```
 
 也可以复制 `.env.example` 为 `.env`，集中配置 provider、goal、镜像和模型地址。

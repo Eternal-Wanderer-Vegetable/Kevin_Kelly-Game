@@ -2,18 +2,18 @@
 
 ## One-command startup
 
-After installing Docker Desktop or Docker Engine with Compose, use the launcher
-from the repository root:
+After installing Docker Desktop or Docker Engine with Compose plus Node.js,
+use the launcher from the repository root:
 
 ```bash
-./deploy.sh
+node deploy.mjs
 ```
 
-On Windows PowerShell:
-
-```powershell
-.\deploy.ps1
-```
+The launcher is a plain Node script, so the same command works in cmd,
+PowerShell, Git Bash, and POSIX shells. Unlike the former `.ps1` launchers it
+is not subject to PowerShell execution policies (`npm run deploy` is an
+alias, but note that a restricted execution policy can also block `npm`'s own
+`.ps1` shim in PowerShell — `node deploy.mjs` always works).
 
 The launcher checks Docker, creates `data/` and `experiments/`, validates the
 Compose file, builds the current checkout image, and starts the interactive
@@ -23,9 +23,9 @@ it suitable for an initial deployment smoke test.
 Common options:
 
 ```bash
-./deploy.sh --provider local --goal "inspect the workspace"
-./deploy.sh --release
-./deploy.sh --release 0.1.0 --python
+node deploy.mjs --provider local --goal "inspect the workspace"
+node deploy.mjs --release
+node deploy.mjs --release 0.1.0 --python
 ```
 
 You can also copy `.env.example` to `.env` to configure the provider, goal,
