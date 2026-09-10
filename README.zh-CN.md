@@ -137,9 +137,10 @@ Release 提供两种等价的分发方式：
 
 ### Release 归档包
 
-归档包包含编译后的 CLI、部署文件和文档，但不包含 `node_modules`。解压后需要
-安装一次生产依赖。归档包应直接通过 `dist` 运行，不需要使用面向源码的
-`npm run` 脚本。
+归档包包含编译后的 CLI、容器镜像构建所需的 TypeScript 源码（`src/`、
+`scripts/`、`test/`、`tsconfig*.json`）、部署文件和文档，但不包含
+`node_modules`。解压后需要安装一次生产依赖。CLI 应通过 `dist` 运行；
+面向源码的 `npm run` 脚本依赖 devDependencies，发布包中不需要使用。
 
 ```bash
 RELEASE_TAG=v0.1.0

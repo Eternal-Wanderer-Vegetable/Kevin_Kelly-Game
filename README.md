@@ -140,10 +140,12 @@ two equivalent distribution paths:
 
 ### Release archive
 
-The archive contains the compiled CLI, deployment files, and documentation. It
-does not contain `node_modules`, so install production dependencies once after
-extracting it. The archive is intentionally run through `dist`; its source-only
-`npm run` scripts are not needed in a release package.
+The archive contains the compiled CLI, the TypeScript sources the container
+image build needs (`src/`, `scripts/`, `test/`, `tsconfig*.json`), deployment
+files, and documentation. It does not contain `node_modules`, so install
+production dependencies once after extracting it. Run the CLI through `dist`;
+the source-only `npm run` scripts need devDependencies and are not needed in a
+release package.
 
 ```bash
 RELEASE_TAG=v0.1.0
