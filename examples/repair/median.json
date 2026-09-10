@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "median-repair-v1",
+  "goal": "Fix median(values) in median.mjs. For any finite numeric array, return the middle value after numeric sorting; for even lengths return the arithmetic mean of the two middle values. Return null for an empty array. Never mutate the input. Preserve the named export median. Use no dependencies. Read the source and visible tests, fix all requirements, then use the test tool.",
+  "editableFiles": ["median.mjs"],
+  "files": {
+    "median.mjs": "export function median(values) {\n  values.sort();\n  return values[Math.floor(values.length / 2)];\n}\n"
+  },
+  "visibleTests": {
+    "visible.test.mjs": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { median } from './median.mjs';\ntest('odd input', () => assert.equal(median([3, 1, 2]), 2));\ntest('even input', () => assert.equal(median([1, 2, 3, 4]), 2.5));\n"
+  },
+  "acceptanceTests": {
+    "acceptance.test.mjs": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { median } from './median.mjs';\ntest('empty', () => assert.equal(median([]), null));\ntest('single', () => assert.equal(median([7]), 7));\ntest('numeric ordering', () => assert.equal(median([2, 11, 3]), 3));\ntest('even average', () => assert.equal(median([9, 1, 7, 3]), 5));\ntest('negative numbers', () => assert.equal(median([-1, -20, -3]), -3));\ntest('fractional values', () => assert.equal(median([1.5, 0.5, 3.5, 2.5]), 2));\ntest('duplicates', () => assert.equal(median([4, 4, 4, 4]), 4));\ntest('input immutability', () => { const values = [3, 1, 2]; const before = [...values]; median(values); assert.deepEqual(values, before); });\n"
+  }
+}
