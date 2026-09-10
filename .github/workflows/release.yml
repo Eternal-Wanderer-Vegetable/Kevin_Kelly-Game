@@ -60,7 +60,13 @@ jobs:
           cp -R \
             dist \
             docs \
+            src \
+            scripts \
+            test \
+            tsconfig.json \
+            tsconfig.tui.json \
             Dockerfile \
+            .dockerignore \
             docker-compose.yml \
             deploy.mjs \
             .env.example \

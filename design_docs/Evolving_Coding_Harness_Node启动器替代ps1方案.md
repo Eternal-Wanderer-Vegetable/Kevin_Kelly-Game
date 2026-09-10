@@ -121,3 +121,20 @@ chmod；`private: true` 不影响 `npm ci` 生成本地 bin。
 - 不改 `src/` 下任何代码；不动 `docker-compose.yml` / `Dockerfile`；
 - 不修改历史方案文档；
 - 不打版本 tag、不触发发版（发版时机另行决定）。
+
+## 9. v0.1.5 发布包实测问题与修复（2026-09-10 补充）
+
+**现象**：在 v0.1.5 发布归档内执行 `node deploy.mjs`（默认构建模式）时，
+`docker compose run --build` 触发镜像构建，`COPY tsconfig.json`、`COPY src`、
+`COPY scripts`、`COPY test` 依次报 `"/test": not found`，构建失败。
+
+**根因**：release.yml 的归档清单只包含 `dist` 与部署文件，不含 Dockerfile
+builder 阶段所需的 `src/`、`scripts/`、`test/`、`tsconfig*.json`。发布包
+因此无法完成镜像构建——这是历史遗留缺口：旧 `deploy.ps1`/`deploy.sh` 在
+发布包内同样会失败（同一 compose 构建路径），与本次启动器替换无关。
+
+**修复**：归档清单加入 `src`、`scripts`、`test`、`tsconfig.json`、
+`tsconfig.tui.json`、`.dockerignore`，使发布包成为可独立构建镜像的完整
+部署单元；两份 README 的归档包内容说明同步更新。验证方式：本地按新清单
+复制出归档目录，在其中执行 `node deploy.mjs --provider mock` 完成
+构建 + REPL 冒烟。
