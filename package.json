@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=24"
   },
+  "bin": {
+    "harness": "dist/scripts/harness.js"
+  },
   "scripts": {
     "dev": "tsx src/index.ts",
     "deploy": "node deploy.mjs",
