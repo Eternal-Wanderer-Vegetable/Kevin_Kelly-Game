@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
+    "deploy": "node deploy.mjs",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.tui.json --noEmit",
     "build": "tsc && tsc -p tsconfig.tui.json",
     "test": "tsx --test \"test/**/*.test.ts\"",
