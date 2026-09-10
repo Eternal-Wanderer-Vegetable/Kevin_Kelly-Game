@@ -87,29 +87,27 @@ generalization report that fails its holdout checks exits with status 1.
 
 Docker Compose now wraps the image build, data directories, runtime hardening,
 and interactive REPL. After installing Docker Desktop or Docker Engine with
-Compose, run:
+Compose plus Node.js, run:
 
 ```bash
-./deploy.sh
+node deploy.mjs
 ```
 
-On Windows PowerShell:
-
-```powershell
-.\deploy.ps1
-```
+The launcher is a plain Node script (alias: `npm run deploy`), so the same
+command works in cmd, PowerShell, Git Bash, and POSIX shells. Unlike the
+former `deploy.ps1`, it is not blocked by PowerShell execution policies.
 
 The default `mock` provider is a credential-free smoke test. To use a
 published image:
 
 ```bash
-./deploy.sh --release
-./deploy.sh --release 0.1.0 --python
+node deploy.mjs --release
+node deploy.mjs --release 0.1.0 --python
 ```
 
 For a real model, copy `.env.example` to `.env`, set
 `HARNESS_LOCAL_MODEL_URL`, `HARNESS_LOCAL_MODEL_KEY`, and
-`HARNESS_LOCAL_MODEL_NAME`, then run `./deploy.sh --provider local`. The
+`HARNESS_LOCAL_MODEL_NAME`, then run `node deploy.mjs --provider local`. The
 launcher creates `data/` and `experiments/` and preserves the existing bind
 mounts.
 
@@ -185,6 +183,11 @@ node dist/scripts/run-generation.js --plan <plan.json>
 node dist/scripts/replay-run.js --input <events.jsonl>
 node dist/scripts/report.js --input <events.jsonl>
 ```
+
+After `npm ci --omit=dev`, npm also links the `harness` bin declared in
+`package.json`, so `npx harness <command> ...` runs the same compiled entry.
+On Windows with a restricted execution policy, call it as
+`npx.cmd harness ...` from PowerShell, or use cmd or Git Bash.
 
 For the interactive workflow, start with `repl`. Use
 `--provider mock` for a local smoke test, `--provider local` for an
