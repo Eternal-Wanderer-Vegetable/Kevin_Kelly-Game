@@ -70,6 +70,7 @@ npm run run-generation
                      Run one calibration or generalization experiment generation
 npm run replay-run   Show the event replay CLI help
 npm run report       Show the report CLI help
+npm run webui        Start the read-only web experiment dashboard (http://127.0.0.1:8080)
 npm run harness      Show the root harness CLI help
 npm run harness -- repl --provider mock --goal "inspect the workspace"
 npm run harness -- run-generation --plan ./plans/generation.json --format json
@@ -118,6 +119,13 @@ remains available:
 docker compose run --rm harness --help
 docker compose run --rm harness config
 ```
+
+To watch experiment progress from a browser instead of a terminal, start the
+read-only web dashboard with `node deploy.mjs --web` (or
+`docker compose --profile web up -d webui`). It publishes port 8080 with
+read-only mounts of `data/` and `experiments/`; no token is needed over
+localhost or an SSH tunnel, and `HARNESS_WEBUI_TOKEN` must be set before
+exposing it publicly. See [`docs/web-dashboard.md`](docs/web-dashboard.md).
 
 The Python variant is available with `--target runtime-python`. See
 [`docs/container-deployment.md`](docs/container-deployment.md) for Compose

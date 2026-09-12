@@ -70,6 +70,7 @@ npm run run-generation
                      运行一代校准或泛化实验
 npm run replay-run   显示事件重放帮助
 npm run report       显示报告命令帮助
+npm run webui        启动只读 Web 实验仪表盘（默认 http://127.0.0.1:8080）
 npm run harness      显示 Harness 根命令帮助
 npm run harness -- repl --provider mock --goal "检查工作区"
 npm run harness -- run-generation --plan ./plans/generation.json --format json
@@ -117,6 +118,12 @@ node deploy.mjs --release 0.1.0 --python
 docker compose run --rm harness --help
 docker compose run --rm harness config
 ```
+
+想在浏览器中随时查看实验进度，可以启动只读 Web 仪表盘：
+`node deploy.mjs --web`（或 `docker compose --profile web up -d webui`）。
+默认发布 8080 端口、只读挂载 `data/` 与 `experiments/`；本地或 SSH 隧道无需
+token，公网暴露前必须设置 `HARNESS_WEBUI_TOKEN`。详见
+[`docs/web-dashboard.zh-CN.md`](docs/web-dashboard.zh-CN.md)。
 
 Python 变体使用 `--target runtime-python` 构建。Compose 卷映射、模型地址、
 资源限制和容器安全边界见
