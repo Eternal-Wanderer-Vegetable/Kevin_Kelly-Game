@@ -44,7 +44,7 @@ export const definition: CommandDefinition = {
   options: [
     "--host <addr>            Bind address. Defaults to 127.0.0.1; containers pass 0.0.0.0.",
     "--port <number>          Port. Defaults to 8080.",
-    "--token <value>          Require this token on every request. Omit it for an open local server.",
+    "--token <value>          Require this token on every request. Falls back to HARNESS_WEBUI_TOKEN; without either the server is open.",
     "--artifacts-dir <path>   Experiments directory to expose read-only. Defaults to ./experiments.",
     "--poll-interval <ms>     Event log poll interval. Defaults to 1500.",
     ...CONFIG_OPTION_HELP.filter(
@@ -72,7 +72,7 @@ export const webuiCommand: CliCommand = {
     const host = stringOption(values, "host") ?? "127.0.0.1";
     const port = numberOption(values, "port") ?? 8080;
     const pollIntervalMs = numberOption(values, "poll-interval") ?? 1500;
-    const token = stringOption(values, "token");
+    const token = stringOption(values, "token") ?? readToken(process.env);
     const artifactsDir = resolve(stringOption(values, "artifacts-dir") ?? "experiments");
 
     const server = await startWebUiServer({
@@ -105,3 +105,17 @@ export const webuiCommand: CliCommand = {
     return 0;
   },
 };
+
+/**
+ * Mirrors the provider-key readers: a blank env value counts as unset, so
+ * compose templates like `HARNESS_WEBUI_TOKEN: ${HARNESS_WEBUI_TOKEN:-}` do
+ * not silently enable an empty token.
+ */
+function readToken(
+  env: Readonly<Record<string, string | undefined>>,
+): string | undefined {
+  const value = env.HARNESS_WEBUI_TOKEN;
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}

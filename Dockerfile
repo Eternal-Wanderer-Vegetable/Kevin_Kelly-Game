@@ -9,9 +9,12 @@ RUN npm ci
 
 COPY tsconfig.json ./
 COPY tsconfig.tui.json ./
+COPY tsconfig.webui.json ./
+COPY vite.config.ts ./
 COPY src ./src
 COPY scripts ./scripts
 COPY test ./test
+COPY webui ./webui
 
 RUN npm run typecheck && npm run build
 
