@@ -33,6 +33,9 @@ import { type CliCommand } from "../command.js";
 import { startWebUiServer } from "../../web/server.js";
 import type { CommandDefinition } from "../help.js";
 
+/** The built SPA, produced by `vite build` into dist/webui. */
+const DEFAULT_STATIC_ROOT = "dist/webui";
+
 export const definition: CommandDefinition = {
   name: "webui",
   summary: "Serve the read-only experiment dashboard over HTTP.",
@@ -78,6 +81,7 @@ export const webuiCommand: CliCommand = {
       eventLogPath: config.eventLogPath,
       defaultEnergy: config.defaultEnergy,
       artifactsDir,
+      staticRoot: resolve(DEFAULT_STATIC_ROOT),
       ...(token === undefined ? {} : { token }),
       pollIntervalMs,
       onRequest: (line) => io.out(`${new Date().toISOString()} ${line}\n`),
