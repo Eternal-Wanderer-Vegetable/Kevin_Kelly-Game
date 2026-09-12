@@ -28,6 +28,7 @@ import { replCommand } from "../src/cli/commands/repl.js";
 import { runGenerationCommand } from "../src/cli/commands/run-generation.js";
 import { runTaskCommand } from "../src/cli/commands/run-task.js";
 import { runRepairCommand } from "../src/cli/commands/run-repair.js";
+import { webuiCommand } from "../src/cli/commands/webui.js";
 
 /**
  * Root command. Each subcommand keeps its own entry point under scripts/ as
@@ -42,6 +43,7 @@ const COMMANDS: readonly CliCommand[] = [
   replCommand,
   runGenerationCommand,
   runRepairCommand,
+  webuiCommand,
 ];
 
 const NAME_WIDTH = 12;

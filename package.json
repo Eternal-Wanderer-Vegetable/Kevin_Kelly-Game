@@ -20,7 +20,8 @@
     "run-repair": "tsx scripts/run-repair.ts",
     "run-generation": "tsx scripts/run-generation.ts",
     "replay-run": "tsx scripts/replay-run.ts",
-    "report": "tsx scripts/report.ts"
+    "report": "tsx scripts/report.ts",
+    "webui": "tsx scripts/webui.ts"
   },
   "dependencies": {
     "ink": "7.1.1",
