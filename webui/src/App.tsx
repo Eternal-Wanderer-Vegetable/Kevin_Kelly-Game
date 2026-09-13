@@ -34,6 +34,12 @@ import {
   fetchSummary,
   openEventStream,
 } from "./api";
+import {
+  availableLocales,
+  useI18n,
+  type Language,
+  type MessageKey,
+} from "./i18n";
 
 type Route =
   | { readonly view: "runs" }
@@ -49,7 +55,19 @@ function parseHash(hash: string): Route {
   return { view: "runs" };
 }
 
+/** Badge labels are messages; the CSS class stays the raw status value. */
+const STATUS_MESSAGE_KEYS: Readonly<Record<string, MessageKey>> = {
+  running: "status.running",
+  completed: "status.completed",
+  error: "status.error",
+  stalled: "status.stalled",
+  active: "status.active",
+  dormant: "status.dormant",
+  dead: "status.dead",
+};
+
 export function App(): JSX.Element {
+  const { t } = useI18n();
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash),
   );
@@ -64,12 +82,13 @@ export function App(): JSX.Element {
     <div className="app">
       <header className="topbar">
         <h1>
-          <a href="#/">Harness Dashboard</a>
+          <a href="#/">{t("app.title")}</a>
         </h1>
         <nav>
-          <a href="#/">Runs</a>
-          <a href="#/artifacts">Artifacts</a>
+          <a href="#/">{t("nav.runs")}</a>
+          <a href="#/artifacts">{t("nav.artifacts")}</a>
         </nav>
+        <LanguageSwitcher />
       </header>
       <main>
         {route.view === "runs" && <RunsView />}
@@ -80,7 +99,28 @@ export function App(): JSX.Element {
   );
 }
 
+function LanguageSwitcher(): JSX.Element {
+  const { language, setLanguage, t } = useI18n();
+  return (
+    <label className="language">
+      <span className="muted">{t("language.label")}</span>
+      <select
+        value={language}
+        aria-label={t("language.label")}
+        onChange={(change) => setLanguage(change.target.value as Language)}
+      >
+        {availableLocales().map((locale) => (
+          <option key={locale.id} value={locale.id}>
+            {locale.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function RunsView(): JSX.Element {
+  const { t } = useI18n();
   const [runs, setRuns] = useState<readonly RunListItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,25 +148,20 @@ function RunsView(): JSX.Element {
   }, []);
 
   if (error !== null) return <ErrorNotice message={error} />;
-  if (runs === null) return <p className="muted">Loading runs…</p>;
+  if (runs === null) return <p className="muted">{t("runs.loading")}</p>;
   if (runs.length === 0) {
-    return (
-      <p className="muted">
-        No runs recorded yet. Start an experiment and this list refreshes
-        itself.
-      </p>
-    );
+    return <p className="muted">{t("runs.empty")}</p>;
   }
 
   return (
     <table className="runs">
       <thead>
         <tr>
-          <th>Run</th>
-          <th>Status</th>
-          <th>Events</th>
-          <th>Started</th>
-          <th>Last event</th>
+          <th>{t("runs.column.run")}</th>
+          <th>{t("runs.column.status")}</th>
+          <th>{t("runs.column.events")}</th>
+          <th>{t("runs.column.started")}</th>
+          <th>{t("runs.column.last")}</th>
         </tr>
       </thead>
       <tbody>
@@ -156,6 +191,7 @@ function RunsView(): JSX.Element {
 }
 
 function RunDetailView({ runId }: { readonly runId: string }): JSX.Element {
+  const { t, language } = useI18n();
   const [summary, setSummary] = useState<RunSummary | null>(null);
   const [events, setEvents] = useState<readonly DashboardEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +242,7 @@ function RunDetailView({ runId }: { readonly runId: string }): JSX.Element {
   return (
     <section className="detail">
       <p>
-        <a href="#/">&larr; All runs</a>
+        <a href="#/">{t("detail.back")}</a>
       </p>
       <h2 className="run-title">
         {runId} {summary !== null && <StatusBadge status={summary.status} />}
@@ -216,15 +252,15 @@ function RunDetailView({ runId }: { readonly runId: string }): JSX.Element {
         <>
           <dl className="facts">
             <div>
-              <dt>Events</dt>
+              <dt>{t("detail.events")}</dt>
               <dd>{summary.eventCount}</dd>
             </div>
             <div>
-              <dt>Agents</dt>
+              <dt>{t("detail.agents")}</dt>
               <dd>{summary.agents.length}</dd>
             </div>
             <div>
-              <dt>Initial energy</dt>
+              <dt>{t("detail.initialEnergy")}</dt>
               <dd>{summary.initialEnergy}</dd>
             </div>
           </dl>
@@ -235,9 +271,9 @@ function RunDetailView({ runId }: { readonly runId: string }): JSX.Element {
               ))}
             </ul>
           )}
-          <h3>Agents</h3>
+          <h3>{t("detail.agentsHeading")}</h3>
           {summary.agents.length === 0 ? (
-            <p className="muted">No agents recorded in this run.</p>
+            <p className="muted">{t("detail.noAgents")}</p>
           ) : (
             <div className="agents">
               {summary.agents.map((agent) => (
@@ -247,7 +283,10 @@ function RunDetailView({ runId }: { readonly runId: string }): JSX.Element {
                     <StatusBadge status={agent.lifecycle.toLowerCase()} />
                   )}
                   <span className="muted">
-                    energy {agent.energy === null ? "n/a" : agent.energy}
+                    {t("detail.energyLabel")}{" "}
+                    {agent.energy === null
+                      ? t("detail.energyUnavailable")
+                      : agent.energy}
                   </span>
                 </div>
               ))}
@@ -257,16 +296,16 @@ function RunDetailView({ runId }: { readonly runId: string }): JSX.Element {
       )}
       <GenerationProgress events={events} />
       <RepairProgress events={events} />
-      <h3>Event stream</h3>
-      <p className="muted">{events.length} live events (last 500 kept)</p>
+      <h3>{t("detail.streamHeading")}</h3>
+      <p className="muted">{t("detail.liveEvents", { count: events.length })}</p>
       {types.length > 1 && (
         <label className="filter">
-          Type{" "}
+          {t("detail.filterType")}{" "}
           <select
             value={typeFilter}
             onChange={(change) => setTypeFilter(change.target.value)}
           >
-            <option value="">all</option>
+            <option value="">{t("detail.filterAll")}</option>
             {types.map((type) => (
               <option key={type} value={type}>
                 {type}
@@ -278,16 +317,16 @@ function RunDetailView({ runId }: { readonly runId: string }): JSX.Element {
       <table className="events">
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Type</th>
-            <th>Agent</th>
-            <th>Detail</th>
+            <th>{t("events.column.time")}</th>
+            <th>{t("events.column.type")}</th>
+            <th>{t("events.column.agent")}</th>
+            <th>{t("events.column.detail")}</th>
           </tr>
         </thead>
         <tbody>
           {visible.map((item) => (
             <tr key={item.eventId}>
-              <td>{formatTime(item.timestamp)}</td>
+              <td>{formatTime(item.timestamp, language)}</td>
               <td>
                 <code>{item.type}</code>
               </td>
@@ -306,6 +345,7 @@ function GenerationProgress({
 }: {
   readonly events: readonly DashboardEvent[];
 }): JSX.Element | null {
+  const { t } = useI18n();
   const started = events.filter(
     (item) => item.type === "GENERATION_STARTED",
   ).length;
@@ -315,10 +355,8 @@ function GenerationProgress({
   ).length;
   return (
     <div className="progress-block">
-      <h3>Generations</h3>
-      <p>
-        completed {completed} of {started} started
-      </p>
+      <h3>{t("generations.heading")}</h3>
+      <p>{t("generations.summary", { completed, started })}</p>
       <Progress value={completed} total={started} />
     </div>
   );
@@ -329,6 +367,7 @@ function RepairProgress({
 }: {
   readonly events: readonly DashboardEvent[];
 }): JSX.Element | null {
+  const { t } = useI18n();
   const start = [...events]
     .reverse()
     .find((item) => item.type === "REPAIR_STARTED");
@@ -351,25 +390,28 @@ function RepairProgress({
 
   return (
     <div className="progress-block">
-      <h3>Repair</h3>
+      <h3>{t("repair.heading")}</h3>
       <p>
-        task <code>{taskId || "unknown"}</code> · turn {turns}
-        {maxTurns !== undefined ? ` of ${maxTurns}` : ""}
+        {t("repair.taskLabel")} <code>{taskId || t("repair.taskUnknown")}</code>{" "}
+        ·{" "}
+        {maxTurns !== undefined
+          ? t("repair.turnProgress", { turn: turns, max: maxTurns })
+          : t("repair.turnCount", { turn: turns })}
       </p>
       {maxTurns !== undefined && <Progress value={turns} total={maxTurns} />}
       {acceptanceResult !== undefined && (
         <p>
-          acceptance:{" "}
+          {t("repair.acceptance")}{" "}
           {acceptanceResult.taskSuccess === true ? (
-            <span className="badge ok">passed</span>
+            <span className="badge ok">{t("repair.passed")}</span>
           ) : (
-            <span className="badge fail">failed</span>
+            <span className="badge fail">{t("repair.failed")}</span>
           )}
         </p>
       )}
       {error !== undefined && (
         <p className="error-line">
-          error: {describePayload(error)}
+          {t("repair.error")} {describePayload(error)}
         </p>
       )}
     </div>
@@ -392,6 +434,7 @@ function Progress({
 }
 
 function ArtifactsView(): JSX.Element {
+  const { t } = useI18n();
   const [entries, setEntries] = useState<readonly ArtifactEntry[] | null>(null);
   const [selected, setSelected] = useState<{
     readonly path: string;
@@ -414,15 +457,15 @@ function ArtifactsView(): JSX.Element {
   };
 
   if (error !== null) return <ErrorNotice message={error} />;
-  if (entries === null) return <p className="muted">Loading artifacts…</p>;
+  if (entries === null) return <p className="muted">{t("artifacts.loading")}</p>;
 
   return (
     <section>
-      <h2>Artifacts</h2>
+      <h2>{t("artifacts.heading")}</h2>
       <div className="artifact-layout">
         <ul className="artifact-list">
           {entries.length === 0 && (
-            <li className="muted">No artifacts recorded.</li>
+            <li className="muted">{t("artifacts.empty")}</li>
           )}
           {entries.map((entry) =>
             entry.type === "file" ? (
@@ -453,13 +496,18 @@ function ArtifactsView(): JSX.Element {
 }
 
 function StatusBadge({ status }: { readonly status: string }): JSX.Element {
-  const known = ["running", "completed", "error", "stalled", "active", "dead", "dormant"];
-  const kind = known.includes(status) ? status : "other";
-  return <span className={`badge ${kind}`}>{status}</span>;
+  const { t } = useI18n();
+  const messageKey = STATUS_MESSAGE_KEYS[status];
+  return (
+    <span className={`badge ${messageKey === undefined ? "other" : status}`}>
+      {messageKey === undefined ? t("status.other") : t(messageKey)}
+    </span>
+  );
 }
 
 function ErrorNotice({ message }: { readonly message: string }): JSX.Element {
-  return <p className="error-line">Failed to load: {message}</p>;
+  const { t } = useI18n();
+  return <p className="error-line">{t("detail.failed", { message })}</p>;
 }
 
 function describePayload(event: DashboardEvent): string {
@@ -471,12 +519,11 @@ function describePayload(event: DashboardEvent): string {
   return text.length > 140 ? `${text.slice(0, 140)}…` : text;
 }
 
-function formatTime(iso: string | null): string {
+function formatTime(iso: string | null, language?: string): string {
   if (iso === null) return "—";
   const parsed = new Date(iso);
-  return Number.isNaN(parsed.getTime())
-    ? iso
-    : parsed.toLocaleTimeString([], { hour12: false });
+  if (Number.isNaN(parsed.getTime())) return iso;
+  return parsed.toLocaleTimeString(language, { hour12: false });
 }
 
 function formatBytes(size: number): string {

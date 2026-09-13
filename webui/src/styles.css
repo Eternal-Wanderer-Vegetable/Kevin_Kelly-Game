@@ -83,6 +83,14 @@ code {
   gap: 16px;
 }
 
+.topbar .language {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
 main {
   padding: 24px;
   max-width: 1100px;
