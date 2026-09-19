@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "genomeId": "genome-base-harness",
+  "agentId": "agent-base",
+  "parentId": null,
+  "generation": 0,
+  "plugins": ["plugins/echo-tool/plugin.json"],
+  "workflows": ["workflow.json"],
+  "policies": ["policy.json"],
+  "dependencies": [],
+  "coreHash": "sha256:core",
+  "genomeHash": "sha256:pending"
+}

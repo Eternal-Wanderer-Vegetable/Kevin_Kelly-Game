@@ -34,9 +34,15 @@
 - Clone、结构化 Mutation 与 Embryo 资格检查
 - Agent 生命周期、Population Snapshot 与共享 SLM 队列
 - 参数校准实验与 holdout 泛化评估
+- 端到端演化循环：任务 → Agent → Sandbox → 评价 → Energy → Self-Rewrite/Clone+Mutation → 下一代
+- Genome 资产接入行为：插件工具、Observation 中的 Workflow 指引、Policy 驱动的决策
+- 本地/外部分层认知，Policy 驱动升级
+- DORMANT 差异维护费率、队列优先级与按 Agent 调度统计
+- 生态记忆（遗产索引、可继承的已验证插件）与资源发现任务池
+- 综合 Fitness 评分与人工验收记录命令
 - 使用真实 Sandbox 工作区的交互式 REPL，以及无 TTY 文本回退
 
-仓库仍然是实验性 MVP，暂不提供分布式执行、多 Agent 协作、自动任务生成或生产级持久化层。
+仓库仍然是实验性 MVP，暂不提供分布式执行、多 Agent 协作、自动任务生成、GPU/VRAM 计量或生产级持久化层。
 
 ## 环境要求
 
@@ -74,6 +80,8 @@ npm run webui        启动只读 Web 实验仪表盘（默认 http://127.0.0.1:
 npm run harness      显示 Harness 根命令帮助
 npm run harness -- repl --provider mock --goal "检查工作区"
 npm run harness -- run-generation --plan ./plans/generation.json --format json
+npm run harness -- run-evolution --plan ./examples/plans/evolution-smoke.json --provider mock
+npm run harness -- accept --verdict accept
 ```
 
 CLI 辅助命令目前主要提供 MVP 所需的稳定接口和帮助契约。使用
@@ -318,14 +326,14 @@ src/
   environment/   Agent 可访问的环境与工具
   evaluation/    独立评价与 Base Harness
   energy/        资源与 Energy 结算
-  experiment/    事件日志、校准与泛化实验
-  evolution/      Self-Rewrite、Clone、Mutation 和 Embryo
+  experiment/    事件日志、校准、泛化与演化循环
+  evolution/      Self-Rewrite、Clone、Mutation、Embryo 与 Genome 运行时接线
   genome/         Genome revision 与资产加载
-  lifecycle/      Population 状态与遗产归档
+  lifecycle/      Population 状态、遗产归档与生态记忆
   memory/         Individual Memory 与候选 Plugin
   sandbox/        工作区隔离与命令执行
-  scheduler/      共享本地 SLM 队列
-  tasks/          可复现 Coding Task 执行
+  scheduler/      共享本地 SLM 队列（含优先级与按 Agent 统计）
+  tasks/          可复现 Coding Task 执行与共享任务池
 
 test/             自动化单元和集成测试
 scripts/          CLI 辅助入口

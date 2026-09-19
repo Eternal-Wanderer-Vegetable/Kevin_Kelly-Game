@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "workflow-default",
+  "name": "default-coding-loop",
+  "version": "0.1.0",
+  "steps": ["read", "search", "write", "test"],
+  "dependencies": []
+}

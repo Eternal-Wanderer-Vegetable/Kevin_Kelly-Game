@@ -31,10 +31,23 @@ import {
   DEFAULT_MAX_LISTED_FILES,
 } from "./sandbox-tools.js";
 import {
-  TOOL_NAMES,
-  type ToolName,
   type ToolRegistry,
 } from "./tool-registry.js";
+
+/**
+ * Genome assets the environment should express. Plugins add tools, workflow
+ * steps and policy hints are surfaced in observations so the model can see
+ * the strategy its genome encodes — that is how heritable assets acquire a
+ * phenotype instead of staying inert metadata.
+ */
+export interface GenomeRuntimeAssets {
+  /** Called once with the tool registry after built-ins are registered. */
+  readonly registerTools?: (registry: ToolRegistry) => void;
+  /** Ordered workflow steps shown in the task-start observation. */
+  readonly workflowSteps?: readonly string[];
+  /** Policy-derived hints shown in the task-start observation. */
+  readonly policyHints?: Readonly<Record<string, unknown>>;
+}
 
 export interface SandboxToolEnvironmentOptions {
   readonly workspace: SandboxWorkspace;
@@ -46,6 +59,7 @@ export interface SandboxToolEnvironmentOptions {
   readonly maxOutputBytes?: number;
   readonly maxSearchResults?: number;
   readonly maxListedFiles?: number;
+  readonly genome?: GenomeRuntimeAssets;
 }
 
 export interface SandboxTurnRecord {
@@ -73,6 +87,9 @@ export class SandboxToolEnvironment implements EnvironmentInterface {
 
   public constructor(private readonly options: SandboxToolEnvironmentOptions) {
     this.tools = createSandboxTools(options);
+    // Genome tools register after built-ins; a name collision throws, which
+    // keeps a plugin from silently shadowing the sandbox-boundary tools.
+    options.genome?.registerTools?.(this.tools);
     this.goal = options.goal;
     this.maxListedFiles = options.maxListedFiles ?? DEFAULT_MAX_LISTED_FILES;
   }
@@ -94,7 +111,15 @@ export class SandboxToolEnvironment implements EnvironmentInterface {
           workspaceRoot: ".",
           files,
           allowedCommands: [...this.options.allowedCommands],
-          tools: [...TOOL_NAMES],
+          tools: this.tools.names(),
+          ...(this.options.genome?.workflowSteps !== undefined &&
+          this.options.genome.workflowSteps.length > 0
+            ? { workflow: [...this.options.genome.workflowSteps] }
+            : {}),
+          ...(this.options.genome?.policyHints !== undefined &&
+          Object.keys(this.options.genome.policyHints).length > 0
+            ? { policy: this.options.genome.policyHints }
+            : {}),
         },
       };
     }
@@ -115,7 +140,9 @@ export class SandboxToolEnvironment implements EnvironmentInterface {
   public async act(
     action: AgentAction,
   ): Promise<Readonly<Record<string, unknown>>> {
-    if (!isToolName(action.type)) {
+    // Registry membership decides: built-ins plus whatever genome plugins
+    // registered. Unknown names throw, same as before.
+    if (!this.tools.has(action.type)) {
       throw new Error(`unknown tool action: ${action.type}`);
     }
 
@@ -155,8 +182,4 @@ export class SandboxToolEnvironment implements EnvironmentInterface {
       this.maxListedFiles,
     );
   }
-}
-
-function isToolName(value: string): value is ToolName {
-  return (TOOL_NAMES as readonly string[]).includes(value);
 }

@@ -29,6 +29,7 @@ import {
   type PluginManifest,
 } from "../contracts/index.js";
 import { EnergyLedger } from "../energy/ledger.js";
+import type { EcologicalMemoryIndex } from "./ecological-memory.js";
 
 export interface PopulationEntry {
   readonly state: AgentState;
@@ -53,6 +54,7 @@ export class PopulationController {
   public constructor(
     private readonly energy: EnergyLedger,
     private readonly archiveRoot: string,
+    private readonly ecology?: EcologicalMemoryIndex,
   ) {}
 
   public register(state: AgentState, verifiedPlugins: readonly PluginManifest[] = []): void {
@@ -86,12 +88,23 @@ export class PopulationController {
     return state;
   }
 
+  /**
+   * Applies one maintenance tick. DORMANT agents pay the cheaper
+   * `dormant-maintenance` rate (which may be zero in the energy policy) so
+   * that choosing to sleep is a real economic decision rather than a label:
+   * an agent that cannot afford ACTIVE upkeep survives by going dormant
+   * instead of dying outright.
+   */
   public maintain(agentId: string): AgentState {
     const entry = this.get(agentId);
     if (entry.state.lifecycle === "DEAD") {
       throw new Error(`dead agent cannot be maintained: ${agentId}`);
     }
-    const transaction = this.energy.debit(agentId, "maintenance");
+    const reason =
+      entry.state.lifecycle === "DORMANT"
+        ? "dormant-maintenance"
+        : "maintenance";
+    const transaction = this.energy.debit(agentId, reason);
     if (transaction.amount > transaction.balanceBefore) {
       return this.transition(agentId, "DEAD");
     }
@@ -120,6 +133,16 @@ export class PopulationController {
       )}\n`,
       "utf8",
     );
+    // Feed ecological memory when the index is wired in: a dead agent's
+    // proven plugins stay available to later generations.
+    await this.ecology?.recordDeath({
+      agentId,
+      genomeId: entry.state.genomeId,
+      generation: entry.state.generation,
+      deathReason: "archived after death",
+      archiveDirectory: directory,
+      verifiedPlugins: entry.verifiedPlugins,
+    });
     return directory;
   }
 

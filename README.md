@@ -35,9 +35,15 @@ The implementation currently covers the complete first-stage engineering path:
 - Clone, structural Mutation, and Embryo qualification
 - Agent lifecycle, Population snapshots, and shared SLM queue
 - Calibration experiments and holdout generalization evaluation
+- End-to-end evolution loop: task → agent → sandbox → evaluation → energy → self-rewrite / clone+mutation → next generation
+- Genome assets wired to behaviour: plugin tools, workflow guidance in observations, policy-driven decisions
+- Tiered local/external cognition with policy-driven escalation
+- Dormant differential maintenance, queue priorities and per-agent scheduling stats
+- Ecological memory (legacy index, inheritable verified plugins) and a task pool for resource discovery
+- Composite fitness scoring and a human-acceptance recording command
 - Interactive REPL with a real sandbox workspace and no-TTY text fallback
 
-The repository is still an experimental MVP. It does not yet provide distributed execution, multi-agent collaboration, automatic task generation, or a production-grade persistence layer.
+The repository is still an experimental MVP. It does not yet provide distributed execution, multi-agent collaboration, automatic task generation, GPU/VRAM metering, or a production-grade persistence layer.
 
 ## Requirements
 
@@ -74,6 +80,8 @@ npm run webui        Start the read-only web experiment dashboard (http://127.0.
 npm run harness      Show the root harness CLI help
 npm run harness -- repl --provider mock --goal "inspect the workspace"
 npm run harness -- run-generation --plan ./plans/generation.json --format json
+npm run harness -- run-evolution --plan ./examples/plans/evolution-smoke.json --provider mock
+npm run harness -- accept --verdict accept
 ```
 
 The command-line helpers currently expose the stable interfaces and help contracts used by the MVP. Use `npm run harness -- repl` for the interactive Observe -> Think -> Act session. Ink is loaded only by the TTY renderer; non-interactive commands, CI, and the text fallback do not load it. Experiment orchestration is also available directly through the TypeScript modules under `src/experiment/`.
@@ -188,6 +196,8 @@ The compiled entry points are:
 
 ```text
 node dist/scripts/harness.js <command> ...
+node dist/scripts/harness.js run-evolution --plan <plan.json>
+node dist/scripts/harness.js accept --verdict <accept|reject|1-5>
 node dist/scripts/run-task.js --task <task-spec.json>
 node dist/scripts/run-generation.js --plan <plan.json>
 node dist/scripts/replay-run.js --input <events.jsonl>
@@ -327,16 +337,16 @@ src/
   contracts/      Shared runtime-validated contracts
   core/           Agent lifecycle and turn execution
   environment/   Agent-facing environment and tools
-  evaluation/    Independent evaluation and Base Harness
+  evaluation/    Independent evaluation, fitness, and Base Harness
   energy/         Resource and Energy accounting
-  experiment/     Event logs, calibration, and generalization
-  evolution/      Self-Rewrite, Clone, Mutation, and Embryo logic
+  experiment/     Event logs, calibration, generalization, and the evolution loop
+  evolution/      Self-Rewrite, Clone, Mutation, Embryo, and genome runtime wiring
   genome/         Genome revisions and asset loading
-  lifecycle/      Population state and legacy archiving
+  lifecycle/      Population state, legacy archiving, and ecological memory
   memory/         Individual Memory and candidate Plugins
   sandbox/        Workspace isolation and command execution
-  scheduler/      Shared local SLM queue
-  tasks/          Reproducible coding task execution
+  scheduler/      Shared local SLM queue with priorities and per-agent stats
+  tasks/          Reproducible coding task execution and the shared task pool
 
 test/             Automated unit and integration tests
 scripts/          CLI helper entry points

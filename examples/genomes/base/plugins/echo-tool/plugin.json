@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "plugin-word-count",
+  "name": "word-count-tool",
+  "version": "0.1.0",
+  "entrypoint": "plugins/echo-tool/plugin.mjs",
+  "dependencies": [],
+  "pluginHash": "sha256:b9b5f4635bda4c87652a6fcd4983e34ba1e2ad7e91d81e10a01e6d9e579fc566"
+}

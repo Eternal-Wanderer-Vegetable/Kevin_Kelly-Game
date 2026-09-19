@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "generations": 2,
+  "maxTurnsPerTask": 4,
+  "agents": [
+    { "agentId": "agent-alpha", "genomeDir": "experiments/evolution/agents/alpha" },
+    { "agentId": "agent-beta", "genomeDir": "experiments/evolution/agents/beta" }
+  ],
+  "tasks": [
+    {
+      "task": {
+        "schemaVersion": 1,
+        "taskId": "task-fix-sum-bug",
+        "level": 1,
+        "title": "Fix the off-by-one bug in sumRange so it includes the end value",
+        "repository": { "source": "examples/tasks/fix-sum-bug", "commit": "fixture-v1" },
+        "allowedCommands": ["node"],
+        "acceptanceCriteria": ["test.mjs exits with code 0"],
+        "baselineTestCommand": "node test.mjs"
+      },
+      "inputFiles": {
+        "math.mjs": "export function sumRange(start, end) {\n  let total = 0;\n  for (let i = start; i < end; i++) total += i;\n  return total;\n}\n",
+        "test.mjs": "import { sumRange } from './math.mjs';\nif (sumRange(1, 3) !== 6) process.exit(1);\nif (sumRange(0, 0) !== 0) process.exit(1);\nif (sumRange(2, 5) !== 14) process.exit(1);\nprocess.exit(0);\n"
+      }
+    }
+  ],
+  "energyPolicy": {
+    "initialEnergy": 150,
+    "debitByReason": {
+      "maintenance": 5,
+      "dormant-maintenance": 1,
+      "clone": 50,
+      "model-call": 2
+    },
+    "rewardByReason": {
+      "task-success": 40,
+      "task-discovery": 10
+    }
+  },
+  "cloneAboveEnergy": 200,
+  "dormantBelowEnergy": 10,
+  "rewriteAfterFailures": 2,
+  "taskTimeoutMs": 15000,
+  "directories": {
+    "genomeRoot": "experiments/evolution/genomes",
+    "candidateRoot": "experiments/evolution/candidates",
+    "archiveRoot": "experiments/evolution/archive",
+    "snapshotRoot": "experiments/evolution/snapshots"
+  }
+}

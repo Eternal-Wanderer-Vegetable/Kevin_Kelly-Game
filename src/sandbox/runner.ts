@@ -23,6 +23,11 @@ import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import { ResourceMeter } from "../resources/resource-meter.js";
+import {
+  createProcfsSampler,
+  ChildUsageMonitor,
+  type ChildProcessUsage,
+} from "../resources/child-usage.js";
 import { resolveSandboxPath } from "./workspace.js";
 
 export interface SandboxCommandOptions {
@@ -54,6 +59,12 @@ export interface SandboxResourceUsage {
   readonly scope: "controller-process";
   readonly cpuTimeMs: number;
   readonly memoryPeakBytes: number;
+  /**
+   * Real child-process usage sampled from /proc on Linux. Absent on other
+   * platforms or when sampling failed — never fabricated, since Energy
+   * accounting must not mistake a controller estimate for task cost.
+   */
+  readonly child?: ChildProcessUsage;
 }
 
 export async function runSandboxCommand(
@@ -101,6 +112,14 @@ export async function runSandboxCommand(
   child.stdout?.on("data", collect(stdout));
   child.stderr?.on("data", collect(stderr));
 
+  // Real child-process usage where the platform supports it (Linux /proc).
+  const sampler = createProcfsSampler();
+  const monitor =
+    sampler !== null && child.pid !== undefined
+      ? new ChildUsageMonitor(sampler, child.pid)
+      : null;
+  monitor?.start();
+
   let timedOut = false;
   const timeout = setTimeout(() => {
     timedOut = true;
@@ -113,6 +132,7 @@ export async function runSandboxCommand(
   ];
   clearTimeout(timeout);
   const usage = meter.finish();
+  const childUsage = (await monitor?.finish()) ?? undefined;
 
   return {
     command: options.command,
@@ -125,11 +145,12 @@ export async function runSandboxCommand(
     outputTruncated,
     durationMs: usage.wallTimeMs,
     resourceUsage: {
-      // ResourceMeter measures the controller process. Child-process resource
-      // accounting is platform-specific and remains outside this phase.
+      // ResourceMeter measures the controller process. Real child-process
+      // accounting is attached under `child` when the platform provides it.
       scope: "controller-process",
       cpuTimeMs: usage.cpuTimeMs,
       memoryPeakBytes: usage.memoryPeakBytes,
+      ...(childUsage === undefined ? {} : { child: childUsage }),
     },
   };
 }

@@ -91,13 +91,21 @@ function calculateStability(result: TaskRunResult): number {
 
 function createUsageRecord(input: EvaluationInput): UsageRecord {
   const resourceUsage = input.candidate.commandResult?.resourceUsage;
+  // Prefer the real child-process reading when the platform supplied one;
+  // the controller-process numbers remain the fallback.
+  const cpuTimeMs =
+    resourceUsage?.child?.cpuTimeMs ?? resourceUsage?.cpuTimeMs ?? 0;
+  const memoryPeakBytes =
+    resourceUsage?.child?.memoryPeakBytes ??
+    resourceUsage?.memoryPeakBytes ??
+    0;
   return {
     schemaVersion: 1,
     usageId: `usage-${input.evaluationId ?? randomUUID()}`,
     agentId: input.agentId,
     wallTimeMs: input.candidate.commandResult?.durationMs ?? 0,
-    cpuTimeMs: resourceUsage?.cpuTimeMs ?? 0,
-    memoryPeakBytes: resourceUsage?.memoryPeakBytes ?? 0,
+    cpuTimeMs,
+    memoryPeakBytes,
     localModelCalls: 0,
     externalModelCalls: 0,
   };
