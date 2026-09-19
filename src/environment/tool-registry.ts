@@ -30,7 +30,11 @@ export const TOOL_NAMES = [
 export type ToolName = (typeof TOOL_NAMES)[number];
 
 export interface ToolCall {
-  readonly name: ToolName;
+  /**
+   * Built-in calls use ToolName; plugin tools register additional names, so
+   * the call site accepts any string and the registry decides.
+   */
+  readonly name: ToolName | (string & {});
   readonly input: Readonly<Record<string, unknown>>;
 }
 
@@ -44,9 +48,9 @@ export type ToolHandler = (
 ) => Promise<ToolResult>;
 
 export class ToolRegistry {
-  private readonly handlers = new Map<ToolName, ToolHandler>();
+  private readonly handlers = new Map<string, ToolHandler>();
 
-  public register(name: ToolName, handler: ToolHandler): void {
+  public register(name: ToolName | (string & {}), handler: ToolHandler): void {
     if (this.handlers.has(name)) {
       throw new Error(`tool ${name} is already registered`);
     }
@@ -61,7 +65,12 @@ export class ToolRegistry {
     return handler(call.input);
   }
 
-  public has(name: ToolName): boolean {
+  public has(name: ToolName | (string & {})): boolean {
     return this.handlers.has(name);
+  }
+
+  /** Every registered tool name, built-ins first in registration order. */
+  public names(): readonly string[] {
+    return [...this.handlers.keys()];
   }
 }

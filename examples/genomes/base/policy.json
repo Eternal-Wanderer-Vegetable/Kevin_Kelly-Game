@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "policyId": "policy-default",
+  "name": "default-policy",
+  "version": "0.1.0",
+  "rules": {
+    "cognition.externalAfterFailures": 3,
+    "lifecycle.dormantBelowEnergy": 10,
+    "reproduction.cloneAboveEnergy": 200,
+    "resource.queuePriority": 0
+  }
+}

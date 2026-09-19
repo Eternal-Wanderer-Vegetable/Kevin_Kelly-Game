@@ -1,0 +1,19 @@
+{
+  "task": {
+    "schemaVersion": 1,
+    "taskId": "task-add-clamp",
+    "level": 1,
+    "title": "Implement clamp(value, min, max) in util.mjs so the tests pass",
+    "repository": {
+      "source": "examples/tasks/add-clamp",
+      "commit": "fixture-v1"
+    },
+    "allowedCommands": ["node"],
+    "acceptanceCriteria": ["test.mjs exits with code 0"],
+    "baselineTestCommand": "node test.mjs"
+  },
+  "inputFiles": {
+    "util.mjs": "export function clamp(value, min, max) {\n  // TODO: implement\n  return value;\n}\n",
+    "test.mjs": "import { clamp } from './util.mjs';\nif (clamp(5, 0, 10) !== 5) process.exit(1);\nif (clamp(-1, 0, 10) !== 0) process.exit(1);\nif (clamp(11, 0, 10) !== 10) process.exit(1);\nif (clamp(3, 3, 3) !== 3) process.exit(1);\nprocess.exit(0);\n"
+  }
+}

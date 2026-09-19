@@ -24,6 +24,12 @@ export interface QueueRequest<T> {
   readonly execute: () => Promise<T>;
   readonly timeoutMs?: number;
   readonly signal?: AbortSignal;
+  /**
+   * Larger values run first; equal priorities keep FIFO order. Defaults to 0.
+   * Priority only orders pending requests — a running request is never
+   * preempted, so a high-priority request cannot starve one already executing.
+   */
+  readonly priority?: number;
 }
 
 export interface QueueMetrics {
@@ -46,29 +52,85 @@ export interface QueueFailure {
   readonly metrics: QueueMetrics;
 }
 
+/**
+ * Per-agent scheduling history. Experiment plans require these counters so a
+ * harness difference can be told apart from scheduling luck: an agent that
+ * lost repeatedly because it queued behind others looks different from one
+ * whose cognition was genuinely slower.
+ */
+export interface AgentQueueStats {
+  readonly agentId: string;
+  readonly enqueued: number;
+  readonly completed: number;
+  readonly failed: number;
+  readonly totalWaitMs: number;
+  readonly totalExecutionMs: number;
+}
+
 export class SharedSlmQueue {
   private readonly pending: Array<{
     request: QueueRequest<unknown>;
     queuedAt: number;
+    sequence: number;
     resolve: (result: QueueResult<unknown>) => void;
     reject: (error: QueueFailure) => void;
   }> = [];
+  private readonly stats = new Map<string, {
+    enqueued: number;
+    completed: number;
+    failed: number;
+    totalWaitMs: number;
+    totalExecutionMs: number;
+  }>();
+  private sequence = 0;
   private running = false;
 
   public enqueue<T>(request: QueueRequest<T>): Promise<QueueResult<T>> {
     return new Promise((resolve, reject) => {
+      const priority = request.priority ?? 0;
+      if (!Number.isFinite(priority)) {
+        reject({
+          agentId: request.agentId,
+          reason: "queue priority must be a finite number",
+          metrics: {
+            agentId: request.agentId,
+            queuedAt: Date.now(),
+            startedAt: Date.now(),
+            finishedAt: Date.now(),
+            waitMs: 0,
+            executionMs: 0,
+          },
+        });
+        return;
+      }
+      this.statsFor(request.agentId).enqueued += 1;
       this.pending.push({
         request: request as QueueRequest<unknown>,
         queuedAt: Date.now(),
+        sequence: this.sequence++,
         resolve: resolve as (result: QueueResult<unknown>) => void,
         reject,
       });
+      // Keep pending sorted by priority (desc) then arrival order (asc), so
+      // processNext can always shift() the head.
+      this.pending.sort(
+        (a, b) =>
+          (b.request.priority ?? 0) - (a.request.priority ?? 0) ||
+          a.sequence - b.sequence,
+      );
       void this.processNext();
     });
   }
 
   public size(): number {
     return this.pending.length + (this.running ? 1 : 0);
+  }
+
+  public statsByAgent(): readonly AgentQueueStats[] {
+    return [...this.stats.entries()].map(([agentId, entry]) => ({
+      agentId,
+      ...entry,
+    }));
   }
 
   private async processNext(): Promise<void> {
@@ -87,10 +149,14 @@ export class SharedSlmQueue {
       waitMs: startedAt - queuedAt,
       executionMs: 0,
     };
+    const stats = this.statsFor(request.agentId);
     try {
       if (request.signal?.aborted) throw new Error("queue request cancelled");
       const value = await withTimeout(request.execute(), request.timeoutMs);
       const finishedAt = Date.now();
+      stats.completed += 1;
+      stats.totalWaitMs += startedAt - queuedAt;
+      stats.totalExecutionMs += finishedAt - startedAt;
       item.resolve({
         value,
         metrics: {
@@ -101,6 +167,9 @@ export class SharedSlmQueue {
       });
     } catch (error) {
       const finishedAt = Date.now();
+      stats.failed += 1;
+      stats.totalWaitMs += startedAt - queuedAt;
+      stats.totalExecutionMs += finishedAt - startedAt;
       item.reject({
         agentId: request.agentId,
         reason: error instanceof Error ? error.message : String(error),
@@ -114,6 +183,27 @@ export class SharedSlmQueue {
       this.running = false;
       void this.processNext();
     }
+  }
+
+  private statsFor(agentId: string): {
+    enqueued: number;
+    completed: number;
+    failed: number;
+    totalWaitMs: number;
+    totalExecutionMs: number;
+  } {
+    let entry = this.stats.get(agentId);
+    if (entry === undefined) {
+      entry = {
+        enqueued: 0,
+        completed: 0,
+        failed: 0,
+        totalWaitMs: 0,
+        totalExecutionMs: 0,
+      };
+      this.stats.set(agentId, entry);
+    }
+    return entry;
   }
 }
 

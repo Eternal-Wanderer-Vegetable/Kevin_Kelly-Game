@@ -1,0 +1,293 @@
+/*
+ * Copyright (C) 2026 Vegetable
+ *
+ * This file is part of Evolving Coding Harness.
+ *
+ * Evolving Coding Harness is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Evolving Coding Harness is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Evolving Coding Harness. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+:root {
+  color-scheme: dark;
+  --bg: #101418;
+  --panel: #171d24;
+  --border: #2a3340;
+  --text: #dde5ee;
+  --muted: #8794a5;
+  --accent: #4da3ff;
+  --ok: #3fb96f;
+  --warn: #d99a2b;
+  --fail: #e05252;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.topbar h1 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.topbar h1 a {
+  color: var(--text);
+}
+
+.topbar nav {
+  display: flex;
+  gap: 16px;
+}
+
+.topbar .language {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+main {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+td.payload {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 420px;
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 10px;
+  padding: 1px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+
+.badge.running,
+.badge.active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.badge.completed,
+.badge.ok {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.badge.stalled,
+.badge.dormant {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.badge.error,
+.badge.fail,
+.badge.dead {
+  color: var(--fail);
+  border-color: var(--fail);
+}
+
+.run-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+}
+
+.facts {
+  display: flex;
+  gap: 32px;
+  margin: 12px 0;
+}
+
+.facts dt {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 18px;
+}
+
+.agents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.agent-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+.progress-block {
+  margin-top: 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.progress-block h3 {
+  margin: 0 0 8px;
+}
+
+.bar {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.error-line {
+  color: var(--fail);
+}
+
+.warnings {
+  color: var(--warn);
+  font-size: 12px;
+}
+
+.filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+select,
+button {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+.artifact-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 2fr;
+  gap: 20px;
+}
+
+.artifact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.artifact-list button {
+  font: inherit;
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.artifact-preview pre {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 60vh;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -74,6 +74,9 @@ jobs:
       - name: Validate Compose configuration
         run: docker compose config --quiet
 
+      - name: Validate Compose configuration with web profile
+        run: docker compose --profile web config --quiet
+
       - name: Check CLI help
         run: docker compose run --rm harness --help
 

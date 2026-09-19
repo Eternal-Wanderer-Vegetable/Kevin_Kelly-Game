@@ -63,8 +63,11 @@ jobs:
             src \
             scripts \
             test \
+            webui \
             tsconfig.json \
             tsconfig.tui.json \
+            tsconfig.webui.json \
+            vite.config.ts \
             Dockerfile \
             .dockerignore \
             docker-compose.yml \

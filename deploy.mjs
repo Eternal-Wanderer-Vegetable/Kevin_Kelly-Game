@@ -34,12 +34,16 @@ Options:
   --python              Use the runtime-python image/target.
   --provider <kind>     Select local, external, or mock.
   --goal <text>         Set the initial task goal.
+  --web [port]          Start the read-only web dashboard instead of the REPL
+                        (defaults to port 8080). Set HARNESS_WEBUI_TOKEN before
+                        exposing it beyond localhost or an SSH tunnel.
   --no-build            Reuse the local image instead of building it.
   --help                Show this help.
 
 Environment:
-  HARNESS_IMAGE, HARNESS_PROVIDER, HARNESS_GOAL and the documented
-  HARNESS_* model variables can also be set in .env or the shell.
+  HARNESS_IMAGE, HARNESS_PROVIDER, HARNESS_GOAL, HARNESS_WEBUI_PORT,
+  HARNESS_WEBUI_TOKEN and the documented HARNESS_* model variables can also be
+  set in .env or the shell.
 `);
 }
 
@@ -54,6 +58,8 @@ function parseArgs(argv) {
     releaseMode: false,
     pythonMode: false,
     noBuild: false,
+    webMode: false,
+    webPort: null,
     releaseTag: null,
     imageOverride: null,
     providerOverride: null,
@@ -85,6 +91,16 @@ function parseArgs(argv) {
         break;
       case "--no-build":
         options.noBuild = true;
+        break;
+      case "--web":
+        options.webMode = true;
+        if (i + 1 < argv.length && !argv[i + 1].startsWith("--")) {
+          const port = Number(argv[++i]);
+          if (!Number.isInteger(port) || port < 1 || port > 65535) {
+            fail(`--web requires a port between 1 and 65535, received: ${argv[i]}`);
+          }
+          options.webPort = port;
+        }
         break;
       case "--help":
       case "-h":
@@ -181,6 +197,28 @@ if (options.releaseMode) {
   if (pullResult.status !== 0) {
     process.exit(pullResult.status ?? 1);
   }
+}
+
+if (options.webMode) {
+  if (options.webPort !== null) {
+    env.HARNESS_WEBUI_PORT = String(options.webPort);
+  }
+  const upArgs = [...composeArgs, "--profile", "web", "up", "-d"];
+  if (!options.releaseMode && !options.noBuild) {
+    upArgs.push("--build");
+  } else {
+    upArgs.push("--no-build");
+  }
+  upArgs.push("webui");
+  const upResult = runCompose(upArgs, { env });
+  if (upResult.status === 0) {
+    const port = env.HARNESS_WEBUI_PORT ?? "8080";
+    console.log(`webui: dashboard on http://localhost:${port}`);
+    console.log(
+      "webui: the server is open while HARNESS_WEBUI_TOKEN is unset — keep the port on localhost or an SSH tunnel, or set a token in .env before exposing it.",
+    );
+  }
+  process.exit(upResult.status ?? 1);
 }
 
 const runArgs = [...composeArgs, "run", "--rm"];

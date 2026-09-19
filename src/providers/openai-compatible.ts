@@ -204,9 +204,9 @@ export function parseAgentAction(content: string): AgentAction {
   }
 
   const type = parsed.type;
-  if (typeof type !== "string" || !isToolName(type)) {
+  if (typeof type !== "string" || !isAcceptedActionType(type)) {
     throw new Error(
-      `provider action type must be one of ${TOOL_NAMES.join(", ")}, received ${String(type)}`,
+      `provider action type must be one of ${[...TOOL_NAMES, ...PROTOCOL_ACTION_TYPES].join(", ")}, received ${String(type)}`,
     );
   }
 
@@ -315,6 +315,21 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   );
 }
 
-function isToolName(value: string): value is (typeof TOOL_NAMES)[number] {
-  return (TOOL_NAMES as readonly string[]).includes(value);
+/**
+ * Non-tool action types that are legal on the wire: `escalate` lets the local
+ * tier ask for external cognition; `mutations`/`rewrite` carry structured
+ * evolution plans for the mutation planner. They are refused by the tool
+ * environment if emitted mid-task, which is the intended behaviour.
+ */
+export const PROTOCOL_ACTION_TYPES = [
+  "escalate",
+  "mutations",
+  "rewrite",
+] as const;
+
+function isAcceptedActionType(value: string): boolean {
+  return (
+    (TOOL_NAMES as readonly string[]).includes(value) ||
+    (PROTOCOL_ACTION_TYPES as readonly string[]).includes(value)
+  );
 }

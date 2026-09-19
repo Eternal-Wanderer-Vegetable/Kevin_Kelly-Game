@@ -32,6 +32,8 @@ import type {
 export interface QueuedCognitionOptions {
   readonly timeoutMs?: number;
   readonly signal?: AbortSignal;
+  /** Forwarded to the shared queue; larger values dequeue first. */
+  readonly priority?: number;
 }
 
 /**
@@ -61,6 +63,9 @@ export class QueuedCognitionProvider implements CognitionProvider {
         ...(this.options.signal === undefined
           ? {}
           : { signal: this.options.signal }),
+        ...(this.options.priority === undefined
+          ? {}
+          : { priority: this.options.priority }),
       });
       this.lastMetrics = result.metrics;
       return result.value;

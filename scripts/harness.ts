@@ -21,13 +21,16 @@
  */
 
 import { defaultIo, executeCommand, type CliCommand } from "../src/cli/command.js";
+import { acceptCommand } from "../src/cli/commands/accept.js";
 import { configCommand } from "../src/cli/commands/config.js";
 import { replayRunCommand } from "../src/cli/commands/replay-run.js";
 import { reportCommand } from "../src/cli/commands/report.js";
 import { replCommand } from "../src/cli/commands/repl.js";
+import { runEvolutionCommand } from "../src/cli/commands/run-evolution.js";
 import { runGenerationCommand } from "../src/cli/commands/run-generation.js";
 import { runTaskCommand } from "../src/cli/commands/run-task.js";
 import { runRepairCommand } from "../src/cli/commands/run-repair.js";
+import { webuiCommand } from "../src/cli/commands/webui.js";
 
 /**
  * Root command. Each subcommand keeps its own entry point under scripts/ as
@@ -41,7 +44,10 @@ const COMMANDS: readonly CliCommand[] = [
   configCommand,
   replCommand,
   runGenerationCommand,
+  runEvolutionCommand,
+  acceptCommand,
   runRepairCommand,
+  webuiCommand,
 ];
 
 const NAME_WIDTH = 12;
